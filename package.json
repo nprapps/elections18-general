@@ -1,0 +1,7 @@
+{
+    "name": "app-template",
+    "version": "1.0.0",
+    "dependencies": {
+        "less": "~1.7.0"
+    }
+}
