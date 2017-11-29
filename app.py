@@ -147,16 +147,6 @@ def _test_app():
 
     return make_response(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-# Example of rendering index.html with admin_app
-@app.route ('/%s/' % app_config.PROJECT_SLUG, methods=['GET'])
-def index():
-    """
-    Example view rendering a simple page.
-    """
-    context = make_context(asset_depth=1)
-
-    return make_response(render_template('index.html', **context))
-
 
 app.before_request(open_db)
 app.after_request(close_db)

@@ -93,11 +93,11 @@ DEBUG = True
 """
 COPY EDITING
 """
-COPY_GOOGLE_DOC_KEY = '1pja8aNw24ZGZTrfO8TSQCfN76gQrj6OhEcs07uz0_C0'
+COPY_GOOGLE_DOC_KEY = '1eIDJz5Ay07XoX8zkSk1fINH-ovS2yaEa99kP67bZMz0'
 COPY_PATH = 'data/copy.xlsx'
 
-CALENDAR_GOOGLE_DOC_KEY = '1Rs2qSw00DYECHummasktOa6zLfrifusJWh-uP-GFgvc'
-CALENDAR_PATH = 'data/calendar.xlsx'
+CALENDAR_GOOGLE_DOC_KEY = '1j5fxdiUyruSdjgNDU14lAIAw-r51oDCMdhaAnKcCWBU'
+CALENDAR_PATH = 'data/meta.xlsx'
 
 """
 SHARING
