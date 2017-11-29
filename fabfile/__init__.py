@@ -59,6 +59,14 @@ def staging():
     app_config.configure_targets(env.settings)
     env.hosts = app_config.SERVERS
 
+
+@task
+def test():
+    """
+    Run against test DB
+    """
+    app_config.configure_targets('test')
+
 """
 Branches
 
