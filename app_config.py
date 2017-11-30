@@ -203,7 +203,7 @@ def configure_targets(deployment_target):
     Database
     """
     database = {
-        'PGDATABASE': PROJECT_SLUG,
+        'PGDATABASE': PROJECT_FILENAME,
         'PGUSER': secrets.get('POSTGRES_USER', PROJECT_FILENAME),
         'PGPASSWORD': secrets.get('POSTGRES_PASSWORD', PROJECT_FILENAME),
         'PGHOST': secrets.get('POSTGRES_HOST', 'localhost'),
