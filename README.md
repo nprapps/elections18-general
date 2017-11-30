@@ -3,8 +3,8 @@ Copyright 2015 NPR.  All rights reserved.  No part of these materials may be rep
 (Want to use this code? Send an email to nprapps@npr.org!)
 
 
-elections18
-===========
+elections17-alabama
+===================
 
 * [What is this?](#what-is-this)
 * [Assumptions](#assumptions)
@@ -33,7 +33,7 @@ elections18
 What is this?
 -------------
 
-The backend for NPR's 2018 elections results coverage.
+The backend for NPR's 2017 alabama special election coverage.
 
 Assumptions
 -----------
@@ -91,8 +91,8 @@ brew install python3
 Then bootstrap the project:
 
 ```
-cd elections18
-mkvirtualenv -p `which python3` elections18
+cd elections17-alabama
+mkvirtualenv -p `which python3` elections17-alabama
 pip install -r requirements.txt
 npm install
 ```
@@ -139,7 +139,7 @@ Run the project
 A flask app is used to run the project locally. It will automatically recompile templates and assets on demand.
 
 ```
-workon $PROJECT_SLUG
+workon elections17-alabama
 fab app
 ```
 
@@ -322,7 +322,7 @@ Compile static assets
 Compile LESS to CSS, compile javascript templates to Javascript and minify all assets:
 
 ```
-workon elections18
+workon elections17-alabama
 fab render
 ```
 
@@ -418,12 +418,12 @@ The Google Analytics events tracked in this application are:
 
 |Category|Action|Label|Value|
 |--------|------|-----|-----|
-|elections18|tweet|`location`||
-|elections18|facebook|`location`||
-|elections18|email|`location`||
-|elections18|new-comment||
-|elections18|open-share-discuss||
-|elections18|close-share-discuss||
-|elections18|summary-copied||
-|elections18|featured-tweet-action|`action`|
-|elections18|featured-facebook-action|`action`|
+|elections17-alabama|tweet|`location`||
+|elections17-alabama|facebook|`location`||
+|elections17-alabama|email|`location`||
+|elections17-alabama|new-comment||
+|elections17-alabama|open-share-discuss||
+|elections17-alabama|close-share-discuss||
+|elections17-alabama|summary-copied||
+|elections17-alabama|featured-tweet-action|`action`|
+|elections17-alabama|featured-facebook-action|`action`|

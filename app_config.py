@@ -20,20 +20,20 @@ NAMES
 """
 # Project name to be used in urls
 # Use dashes, not underscores!
-PROJECT_SLUG = 'elections18'
+PROJECT_SLUG = 'elections17-alabama'
 
 # Project name to be used in file paths
-PROJECT_FILENAME = 'elections18'
+PROJECT_FILENAME = 'elections17_alabama'
 
 # The name of the repository containing the source
-REPOSITORY_NAME = 'elections18'
+REPOSITORY_NAME = 'elections17-alabama'
 GITHUB_USERNAME = 'nprapps'
 REPOSITORY_URL = 'git@github.com:%s/%s.git' % (GITHUB_USERNAME, REPOSITORY_NAME)
 REPOSITORY_ALT_URL = None # 'git@bitbucket.org:nprapps/%s.git' % REPOSITORY_NAME'
 
 # Project name used for assets rig
 # Should stay the same, even if PROJECT_SLUG changes
-ASSETS_SLUG = 'elections18'
+ASSETS_SLUG = 'elections17-alabama'
 
 """
 DEPLOYMENT
@@ -244,11 +244,8 @@ def configure_targets(deployment_target):
         LOG_LEVEL = logging.DEBUG
         DEBUG = True
         ASSETS_MAX_AGE = 20
-        NEXT_ELECTION_DATE = '2016-11-08'
-        FAST_ELEX_FLAGS = '--national-only --results-level state'
-        SLOW_ELEX_FLAGS = '--national-only --results-level ru --raceids 0'
-        ELEX_DISTRICTS_FLAGS = '-d tests/data/test_districts.json -o csv'
-        ELEX_INIT_FLAGS = '-d tests/data/test.json -o csv'
+        NEXT_ELECTION_DATE = '2017-12-12'
+        ELEX_FLAGS = '-d tests/data/test.json -o csv'
         LOAD_RESULTS_INTERVAL = 10
         ELEX_OUTPUT_FOLDER = '.testdata'
         database['PGDATABASE'] = '{0}_test'.format(database['PGDATABASE'])
