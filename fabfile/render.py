@@ -117,4 +117,6 @@ def _write_json_file(serialized_results, filename):
 
 @task
 def render():
+    local('rm -rf {0}'.format(app_config.DATA_OUTPUT_FOLDER))
+    local('mkdir {0}'.format(app_config.DATA_OUTPUT_FOLDER))
     render_senate_results()

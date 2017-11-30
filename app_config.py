@@ -204,8 +204,8 @@ def configure_targets(deployment_target):
     """
     database = {
         'PGDATABASE': PROJECT_SLUG,
-        'PGUSER': secrets.get('POSTGRES_USER', PROJECT_SLUG),
-        'PGPASSWORD': secrets.get('POSTGRES_PASSWORD', PROJECT_SLUG),
+        'PGUSER': secrets.get('POSTGRES_USER', PROJECT_FILENAME),
+        'PGPASSWORD': secrets.get('POSTGRES_PASSWORD', PROJECT_FILENAME),
         'PGHOST': secrets.get('POSTGRES_HOST', 'localhost'),
         'PGPORT': secrets.get('POSTGRES_PORT', '5432')
     }

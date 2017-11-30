@@ -16,13 +16,16 @@ logger.setLevel(app_config.LOG_LEVEL)
 
 
 @task
-def bootstrap_db():
+def bootstrap_db(testfilepath=None):
     """
     Build the database.
     """
     create_db()
     create_tables()
-    load_results()
+    if testfilepath:
+        load_test_csv(testfilepath)
+    else:
+        load_results()
     create_calls()
 
 
@@ -94,6 +97,18 @@ def load_results():
             print(cmd_output.stderr)
 
     logger.info('results loaded')
+
+
+@task
+def load_test_csv(path):
+    """
+    Load flat csv gathered from a previous elex run
+    """
+    delete_results()
+    with hide('output', 'running'):
+        local('cat {0} | psql {1} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(path, app_config.database['PGDATABASE']))
+
+    logger.info('test results loaded')
 
 
 @task
