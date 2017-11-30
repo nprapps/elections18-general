@@ -13,7 +13,6 @@ from . import issues
 from . import render
 from . import text
 from . import utils
-from . import flat
 
 if app_config.DEPLOY_TO_SERVERS:
     from . import servers
@@ -151,8 +150,6 @@ def shiva_the_destroyer():
     )
 
     with settings(warn_only=True):
-        flat.delete_folder(app_config.S3_BUCKET, app_config.PROJECT_SLUG)
-
         if app_config.DEPLOY_TO_SERVERS:
             servers.delete_project()
 
