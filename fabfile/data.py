@@ -105,8 +105,9 @@ def load_test_csv(path):
     Load flat csv gathered from a previous elex run
     """
     delete_results()
-    with hide('output', 'running'):
-        local('cat {0} | psql {1} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(path, app_config.database['PGDATABASE']))
+    with shell_env(**app_config.database):
+        with hide('output', 'running'):
+            local('cat {0} | psql {1} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(path, app_config.database['PGDATABASE']))
 
     logger.info('test results loaded')
 
