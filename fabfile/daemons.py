@@ -1,6 +1,5 @@
 from time import sleep, time
 from fabric.api import execute, require, settings, task
-from fabric.state import env
 
 
 import app_config
@@ -30,28 +29,16 @@ def main(run_once=False):
     Main loop
     """
     results_start = 0
-    mode = 'fast'
 
     while True:
         now = time()
 
         if app_config.LOAD_RESULTS_INTERVAL and (now - results_start) > app_config.LOAD_RESULTS_INTERVAL:
             results_start = now
-            if mode == 'fast':
-                logger.info('loading all national results')
-                execute('data.load_results', mode)
-                execute('deploy_national_data')
-            
-            if mode == 'slow':
-                logger.info('loading all presidential results')
-                execute('data.load_results', mode)
-                execute('deploy_presidential_data')
+            logger.info('loading alabama results')
+            execute('data.load_results')
+            execute('deploy_results')
 
-            if mode == 'fast':
-                mode = 'slow'
-            elif mode == 'slow':
-                mode = 'fast'
-        
         if run_once:
             logger.info('run once specified, exiting')
             sys.exit(0)

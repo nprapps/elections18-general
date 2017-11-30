@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-from datetime import datetime
-import json
-import os
-
-from boto.s3.key import Key
 from fabric.api import local, require, settings, task
 from fabric.state import env
 from termcolor import colored
@@ -18,6 +13,7 @@ from . import issues
 from . import render
 from . import text
 from . import utils
+from . import flat
 
 if app_config.DEPLOY_TO_SERVERS:
     from . import servers
@@ -122,33 +118,17 @@ code to a remote server if required.
 """
 
 @task
-def deploy_national_data():
+def deploy_data():
     local('rm -rf {0}'.format(app_config.DATA_OUTPUT_FOLDER))
     local('mkdir {0}'.format(app_config.DATA_OUTPUT_FOLDER))
 
-    render.render_all_national()
-    deploy_data_folder()
+    render.render()
+    deploy_results()
+
 
 @task
-def deploy_presidential_data():
-    local('rm -rf {0}'.format(app_config.DATA_OUTPUT_FOLDER))
-    local('mkdir {0}'.format(app_config.DATA_OUTPUT_FOLDER))
-
-    render.render_presidential_files()
-    deploy_data_folder()
-
-@task
-def deploy_all_data():
-    local('rm -rf {0}'.format(app_config.DATA_OUTPUT_FOLDER))
-    local('mkdir {0}'.format(app_config.DATA_OUTPUT_FOLDER))
-
-    render.render_all()
-    deploy_data_folder()
-
-@task
-def deploy_data_folder():
-    local('aws s3 cp {0}/top-level-results.json s3://{1}/{2}/data/ --acl public-read --cache-control max-age=5'.format(app_config.DATA_OUTPUT_FOLDER, app_config.S3_BUCKET, app_config.PROJECT_SLUG))
-    local('aws s3 sync {0} s3://{1}/{2}/data/ --acl public-read --cache-control max-age=5'.format(app_config.DATA_OUTPUT_FOLDER, app_config.S3_BUCKET, app_config.PROJECT_SLUG))
+def deploy_results():
+    local('aws s3 cp {0}/alabama-results.json s3://{1}/{2}/data/ --acl public-read --cache-control max-age=5'.format(app_config.DATA_OUTPUT_FOLDER, app_config.S3_BUCKET, app_config.PROJECT_SLUG))
 
 
 """
