@@ -41,8 +41,8 @@ def setup():
     create_virtualenv()
     clone_repo()
     checkout_latest()
-    install_requirements()
     setup_logs()
+    install_requirements()
 
 def create_directories():
     """

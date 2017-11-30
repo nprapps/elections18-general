@@ -22,7 +22,7 @@ NAMES
 # Use dashes, not underscores!
 PROJECT_SLUG = 'elections17-alabama'
 
-# Project name to be used in file paths
+# Project name to be used in file paths and envvars
 PROJECT_FILENAME = 'elections17_alabama'
 
 # The name of the repository containing the source
@@ -165,8 +165,8 @@ def get_secrets():
     secrets_dict = {}
 
     for k,v in os.environ.items():
-        if k.startswith(PROJECT_SLUG):
-            k = k[len(PROJECT_SLUG) + 1:]
+        if k.startswith(PROJECT_FILENAME):
+            k = k[len(PROJECT_FILENAME) + 1:]
             secrets_dict[k] = v
 
     return secrets_dict
