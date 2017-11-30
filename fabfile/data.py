@@ -29,7 +29,7 @@ def bootstrap_db():
     """
     create_db()
     create_tables()
-    load_results('init')
+    load_results()
     create_calls()
     create_race_meta()
 
@@ -64,60 +64,39 @@ def create_tables():
 
 
 @task
-def delete_results(mode):
+def delete_results():
     """
     Delete results without droppping database.
     """
-    if mode == 'fast':
-        where_clause = "WHERE level = 'state' OR level = 'national' OR level = 'district'"
-    elif mode == 'slow':
-        where_clause = "WHERE officename = 'President'"
-    else:
-        where_clause = ''
+    where_clause = ''
 
     with shell_env(**app_config.database), hide('output', 'running'):
         local('psql {0} -c "set session_replication_role = replica; DELETE FROM result {1}; set session_replication_role = default;"'.format(app_config.database['PGDATABASE'], where_clause))
 
 @task
-def load_results(mode):
+def load_results():
     """
     Load AP results. Defaults to next election, or specify a date as a parameter.
     """
-
-    if mode == 'fast':
-        flags = app_config.FAST_ELEX_FLAGS
-    elif mode == 'slow':
-        flags = app_config.SLOW_ELEX_FLAGS
-    else:
-        flags = app_config.ELEX_INIT_FLAGS
+    flags = app_config.ELEX_FLAGS
 
     election_date = app_config.NEXT_ELECTION_DATE
     with hide('output', 'running'):
         local('mkdir -p {0}'.format(app_config.ELEX_OUTPUT_FOLDER))
 
-    cmd = 'elex results {0} {1} > {2}/first_query.csv'.format(election_date, flags, app_config.ELEX_OUTPUT_FOLDER)
-    districts_cmd = 'elex results {0} {1} | csvgrep -c level -m district > {2}/districts.csv'.format(election_date, app_config.ELEX_DISTRICTS_FLAGS, app_config.ELEX_OUTPUT_FOLDER)
+    cmd = 'elex results {0} {1} > {2}/results.csv'.format(election_date, flags, app_config.ELEX_OUTPUT_FOLDER)
 
     with shell_env(**app_config.database):
         with settings(warn_only=True), hide('output', 'running'):
-            first_cmd_output = local(cmd, capture=True)
+            cmd_output = local(cmd, capture=True)
 
-        if first_cmd_output.succeeded or first_cmd_output.return_code == 64:
+        if cmd_output.succeeded or first_cmd_output.return_code == 64:
+            delete_results()
             with hide('output', 'running'):
-                district_cmd_output = local(districts_cmd, capture=True)
-
-            if district_cmd_output.succeeded or district_cmd_output.return_code == 64:
-                delete_results(mode)
-                with hide('output', 'running'):
-                    local('csvstack {0}/first_query.csv {1}/districts.csv | psql {2} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(app_config.ELEX_OUTPUT_FOLDER, app_config.ELEX_OUTPUT_FOLDER, app_config.database['PGDATABASE']))
-
-            else:
-                print("ERROR GETTING DISTRICT RESULTS")
-                print(district_cmd_output.stderr)
-
+                local('cat {0}/results.csv | psql {1} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(app_config.ELEX_OUTPUT_FOLDER, app_config.database['PGDATABASE']))
         else:
             print("ERROR GETTING MAIN RESULTS")
-            print(first_cmd_output.stderr)
+            print(cmd_output.stderr)
 
     logger.info('results loaded')
 
