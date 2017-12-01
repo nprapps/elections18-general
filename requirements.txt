@@ -1,4 +1,5 @@
 Authomatic==0.1.0.post1
+awscli==1.14.2
 Fabric3==1.12.0.post1
 Flask==0.11
 Flask-Admin==1.4.2
