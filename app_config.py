@@ -147,7 +147,7 @@ LOG_FORMAT = '%(levelname)s:%(name)s:%(asctime)s: %(message)s'
 elex config
 """
 NEXT_ELECTION_DATE = '2017-12-12'
-ELEX_FLAGS = '--national-only --results-level state'
+ELEX_FLAGS = '--national-only --test'
 # ELEX_FLAGS = '--national-only --results-level ru'
 
 LOAD_RESULTS_INTERVAL = 10

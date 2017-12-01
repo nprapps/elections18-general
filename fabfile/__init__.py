@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# _*_ coding:utf-8 _*_
 
 from fabric.api import local, require, settings, task
 from fabric.state import env
@@ -118,11 +119,10 @@ code to a remote server if required.
 
 @task
 def deploy_results():
-    local('rm -rf {0}'.format(app_config.DATA_OUTPUT_FOLDER))
-    local('mkdir {0}'.format(app_config.DATA_OUTPUT_FOLDER))
-
     render.render()
-    move_s3()
+    # Ignore deployment when testing locally
+    if env.get('settings'):
+        move_s3()
 
 
 @task
