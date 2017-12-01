@@ -24,6 +24,7 @@ def deploy(run_once=False):
         sys.exit(0)
 
 
+@task
 def main(run_once=False):
     """
     Main loop
@@ -37,7 +38,9 @@ def main(run_once=False):
             results_start = now
             logger.info('loading alabama results')
             execute('data.load_results')
+            logger.info("results loaded: %s seconds" % (time() - results_start))
             execute('deploy_results')
+            logger.info("results rendered and deployed: %s seconds" % (time() - results_start))
 
         if run_once:
             logger.info('run once specified, exiting')
