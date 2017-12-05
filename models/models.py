@@ -75,6 +75,14 @@ class Result(BaseModel):
         else:
             return False
 
+    def nprformat_precinctsreportingpct(self):
+        if self.precinctsreporting > 0 and self.precinctsreportingpct <= 0.005:
+            return '<1%'
+        elif self.precinctsreporting < self.precinctstotal and self.precinctsreportingpct > 0.995:
+            return '>99%'
+        else:
+            return '{0:.0%}'.format(self.precinctsreportingpct)
+
 
 class Call(BaseModel):
     call_id = ForeignKeyField(Result, related_name='call')
