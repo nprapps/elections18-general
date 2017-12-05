@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# _*_ coding:utf-8 _*_
+
 import app_config
 import logging
 import os
@@ -36,13 +39,25 @@ COMMON_SELECTIONS = [
     models.Result.votecount
 ]
 
-SENATE_SELECTIONS = COMMON_SELECTIONS + [
-    models.Result.incumbent,
-    models.Result.runoff
-]
+RACE_SELECTIONS = (
+    'lastupdated',
+    'level',
+    'officename',
+    'precinctsreporting',
+    'nprformat_precinctsreportingpct',
+    'precinctstotal',
+    'statename',
+    'statepostal'
+)
 
-
-ACCEPTED_PARTIES = ['Dem', 'GOP']
+CANDIDATES_SELECTIONS = (
+    'first',
+    'last',
+    'party',
+    'votepct',
+    'votecount',
+    'winner'
+)
 
 
 def _select_senate_results():
@@ -54,7 +69,7 @@ def _select_senate_results():
     return results
 
 
-def _serialize_results(results, selections, key='statepostal'):
+def _serialize_results(results, selections, key='raceid'):
     with models.db.execution_context() as ctx:
         serialized_results = {
             'results': {}
@@ -62,51 +77,26 @@ def _serialize_results(results, selections, key='statepostal'):
 
         for result in results:
             result_dict = model_to_dict(result, backrefs=True, only=selections)
+            # Add custom npr calculated data
             result_dict['winner'] = result.is_npr_winner()
+            result_dict['nprformat_precinctsreportingpct'] = result.nprformat_precinctsreportingpct()
+
 
             dict_key = result_dict[key]
             if not serialized_results['results'].get(dict_key):
-                serialized_results['results'][dict_key] = []
+                serialized_results['results'][dict_key] = {k: result_dict[k] for k in RACE_SELECTIONS}
+                serialized_results['results'][dict_key]['candidates'] = []
 
-            serialized_results['results'][dict_key].append(result_dict)
-
-        serialized_results['last_updated'] = _get_last_updated(serialized_results)
+            serialized_results['results'][dict_key]['candidates'].append({k: result_dict[k] for k in CANDIDATES_SELECTIONS})
 
         return serialized_results
-
-
-def _get_last_updated(serialized_results):
-    last_updated = None
-
-    for key, val in serialized_results['results'].items():
-        if isinstance(val, list):
-            if val[0]['precinctsreporting'] > 0:
-                for result in val:
-                    if not last_updated or result['lastupdated'] > last_updated:
-                        last_updated = result['lastupdated']
-
-        elif isinstance(val, dict):
-            for key, val in val.items():
-                if val[0]['precinctsreporting'] > 0:
-                    for result in val:
-                        if not last_updated or result['lastupdated'] > last_updated:
-                            last_updated = result['lastupdated']
-
-    if not last_updated:
-        last_updated = datetime.utcnow()
-
-    return last_updated
-
-
-def _set_npr_winner(result, result_dict):
-    result_dict['npr_winner'] = result.is_npr_winner()
 
 
 @task
 def render_senate_results():
     results = _select_senate_results()
 
-    serialized_results = _serialize_results(results, SENATE_SELECTIONS)
+    serialized_results = _serialize_results(results, COMMON_SELECTIONS)
     _write_json_file(serialized_results, 'alabama-results.json')
 
 def _write_json_file(serialized_results, filename):
