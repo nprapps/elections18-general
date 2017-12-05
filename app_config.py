@@ -78,7 +78,7 @@ SERVER_SERVICES = [
     ('app', SERVER_REPOSITORY_PATH, 'ini'),
     ('uwsgi', '/etc/init', 'conf'),
     ('nginx', '/etc/nginx/sites-enabled', 'conf'),
-    ('deploy', '/etc/init', 'conf')
+    ('fetch_and_publish_results', '/etc/init', 'conf')
 ]
 
 # These variables will be set at runtime. See configure_targets() below

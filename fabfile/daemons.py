@@ -12,7 +12,7 @@ logger.setLevel(app_config.LOG_LEVEL)
 
 
 @task
-def deploy(run_once=False):
+def fetch_and_publish_results(run_once=False):
     """
     Harvest data and deploy cards
     """
@@ -39,8 +39,8 @@ def main(run_once=False):
             logger.info('loading alabama results')
             execute('data.load_results')
             logger.info("results loaded: %s seconds" % (time() - results_start))
-            execute('deploy_results')
-            logger.info("results rendered and deployed: %s seconds" % (time() - results_start))
+            execute('publish_results')
+            logger.info("results rendered and published: %s seconds" % (time() - results_start))
 
         if run_once:
             logger.info('run once specified, exiting')

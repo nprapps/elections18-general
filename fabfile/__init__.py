@@ -118,7 +118,7 @@ code to a remote server if required.
 """
 
 @task
-def deploy_results():
+def publish_results():
     render.render()
     # Ignore deployment when testing locally
     if env.get('settings'):
