@@ -57,3 +57,6 @@ www/live-data/*
 
 #Logs
 logs/*.log
+
+# Virtualenvwrapper
+.project
