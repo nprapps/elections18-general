@@ -108,7 +108,7 @@ def _serialize_results(results, selections, key='raceid'):
             )
 
             dict_key = result_dict[key]
-            if not serialized_results['results'].get(dict_key):
+            if dict_key not in serialized_results['results']:
                 serialized_results['results'][dict_key] = {
                     k: result_dict[k] for k in RACE_SELECTIONS
                 }
