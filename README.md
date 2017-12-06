@@ -111,7 +111,7 @@ The core functionality of this app is to fetch results from the AP elections API
 
 ### Upstart starts a service that runs Fabric tasks
 
-When the project is deployed, a service is created named `deploy` by copying `confs/fetch_and_publish_results.conf` to `/etc/init/fetch_and_publish_results`.  Once deployed, this service can be started with `fab production servers.start_service:fetch_and_publish_results` or `fab production servers.stop_service:fetch_and_publish_results`.
+When the project is deployed, a service is created named `fetch_and_publish_results` by copying `confs/fetch_and_publish_results.conf` to `/etc/init/fetch_and_publish_results`.  Once deployed, this service can be started with `fab production servers.start_service:fetch_and_publish_results` or  stopped with `fab production servers.stop_service:fetch_and_publish_results`.
 
 The `fetch_and_publish_results` service calls `run_on_server.sh` to initialize the Python and shell environment and then runs the `daemons.fetch_and_publish_results` Fabric task.  This task just runs the `daemons.main` Fabric task.
 
