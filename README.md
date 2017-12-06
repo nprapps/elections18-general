@@ -10,6 +10,7 @@ elections17-alabama
 * [Assumptions](#assumptions)
 * [What's in here?](#whats-in-here)
 * [Bootstrap the project](#bootstrap-the-project)
+* [Data flow](#data-flow)
 * [Hide project secrets](#hide-project-secrets)
 * [Save media assets](#save-media-assets)
 * [Add a page to the site](#add-a-page-to-the-site)
@@ -44,6 +45,7 @@ The following things are assumed to be true in this documentation.
 * You are using **Python 3**.
 * You have [virtualenv](https://pypi.python.org/pypi/virtualenv) and [virtualenvwrapper](https://pypi.python.org/pypi/virtualenvwrapper) installed and working.
 * You have NPR's AWS credentials stored as environment variables locally.
+* You have an AP Elections results API key (see the [elex documentation](http://elex.readthedocs.io/en/stable/install.html#automatically-set-your-api-key) for more on this)
 
 For more details on the technology stack used with the app-template, see our [development environment blog post](http://blog.apps.npr.org/2013/06/06/how-to-setup-a-developers-environment.html).
 
@@ -91,6 +93,7 @@ brew install python3
 Then bootstrap the project:
 
 ```
+git clone git@github.com:nprapps/elections17-alabama.git
 cd elections17-alabama
 mkvirtualenv -p `which python3` elections17-alabama
 pip install -r requirements.txt
@@ -100,6 +103,29 @@ npm install
 Note that deployment depends on `awscli`, which is broken on pip at the moment. Use your operating system's package manager to install it instead. (On Macs, use `brew install awscli`).
 
 **Problems installing requirements?** You may need to run the pip command as ``ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future pip install -r requirements.txt`` to work around an issue with OSX.
+
+Data flow
+---------
+
+The core functionality of this app is to fetch results from the AP elections API, bake them to JSON and publish that JSON to S3 for consumption by the front-end graphics code.  This is how the various pieces of software in this app work together to fetch and publish the results.
+
+### Upstart starts a service that runs Fabric tasks
+
+When the project is deployed, a service is created named `deploy` by copying `confs/fetch_and_publish_results.conf` to `/etc/init/fetch_and_publish_results`.  Once deployed, this service can be started with `fab production servers.start_service:fetch_and_publish_results` or `fab production servers.stop_service:fetch_and_publish_results`.
+
+The `fetch_and_publish_results` service calls `run_on_server.sh` to initialize the Python and shell environment and then runs the `daemons.fetch_and_publish_results` Fabric task.  This task just runs the `daemons.main` Fabric task.
+
+### Fabric tasks use elex to fetch results into a Postgres database
+
+The `daemons.main` Fabric task executes the `data.load_results` Fabric task. This task uses the [elex](https://github.com/newsdev/elex) CLI to download the results as CSV.  It then uses `psql` to load the CSV into a PostgreSQL database using a `COPY` query.
+
+### Fabric tasks render results from the database to JSON
+
+After fetching the results and loading them into the database, the `daemons.main` Fabric task executes the `publish_results` Fabric task. This task calls the `render.render` Fabric task which calls other Python code that uses the [Peewee](https://github.com/coleifer/peewee) ORM to retrieve results from the database through the `models.models.Result` model.  The `_serialize_results` function takes the Peewee model instances, converts them to plain Python dictionaries and adds a few calculated fields. It also shapes the collection of results into the format that will eventually be dumped to a JSON string by `_write_json_file`.
+
+### Fabric tasks upload the rendered JSON to S3
+
+After calling the `render.render` Fabric task, the `publish_results` task calls the `move_s3` task which simply uses the `aws` CLI to upload the results JSON file to S3.
 
 Hide project secrets
 --------------------
