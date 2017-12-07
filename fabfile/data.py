@@ -69,11 +69,14 @@ def delete_results():
 
 
 @task
-def load_results():
+def load_results(mode='default'):
     """
     Load AP results. Defaults to next election, or specify a date as a parameter.
     """
-    flags = app_config.ELEX_FLAGS
+    if mode == 'zeroes':
+        flags = app_config.ELEX_RESET_FLAGS
+    else:
+        flags = app_config.ELEX_FLAGS
 
     election_date = app_config.NEXT_ELECTION_DATE
     with hide('output', 'running'):

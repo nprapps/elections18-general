@@ -119,6 +119,8 @@ The `fetch_and_publish_results` service calls `run_on_server.sh` to initialize t
 
 The `daemons.main` Fabric task executes the `data.load_results` Fabric task. This task uses the [elex](https://github.com/newsdev/elex) CLI to download the results as CSV.  It then uses `psql` to load the CSV into a PostgreSQL database using a `COPY` query.
 
+_note: you can pass zeroes to the load_results task (`data.load_results:zeroes`) to override results with zeros; omits the winner indicator.Sets the vote, delegate, and reporting precinct counts to zero._
+
 ### Fabric tasks render results from the database to JSON
 
 After fetching the results and loading them into the database, the `daemons.main` Fabric task executes the `publish_results` Fabric task. This task calls the `render.render` Fabric task which calls other Python code that uses the [Peewee](https://github.com/coleifer/peewee) ORM to retrieve results from the database through the `models.models.Result` model.  The `_serialize_results` function takes the Peewee model instances, converts them to plain Python dictionaries and adds a few calculated fields. It also shapes the collection of results into the format that will eventually be dumped to a JSON string by `_write_json_file`.

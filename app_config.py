@@ -147,8 +147,10 @@ LOG_FORMAT = '%(levelname)s:%(name)s:%(asctime)s: %(message)s'
 elex config
 """
 NEXT_ELECTION_DATE = '2017-12-12'
+# TODO: Remove test flag
 ELEX_FLAGS = '--national-only --test'
-# ELEX_FLAGS = '--national-only --results-level ru'
+
+ELEX_RESET_FLAGS = '--national-only --test --set-zero-counts'
 
 LOAD_RESULTS_INTERVAL = 10
 DATA_OUTPUT_FOLDER = '.rendered'
