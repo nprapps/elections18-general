@@ -124,7 +124,7 @@ def render_senate_results():
     results = _select_senate_results()
 
     serialized_results = _serialize_results(results, COMMON_SELECTIONS)
-    _write_json_file(serialized_results, 'alabama-results.json')
+    _write_json_file(serialized_results, 'alabama-test-results.json')
 
 
 def _write_json_file(serialized_results, filename):

@@ -219,8 +219,8 @@ def configure_targets(deployment_target):
         SERVER_LOG_PATH = '/var/log/%s' % PROJECT_FILENAME
         LOG_LEVEL = logging.WARNING
         DEBUG = False
-        ASSETS_MAX_AGE = 86400
-        LOAD_RESULTS_INTERVAL = 60
+        ASSETS_MAX_AGE = 20
+        LOAD_RESULTS_INTERVAL = 10
         ELEX_OUTPUT_FOLDER = '.data'
     elif deployment_target == 'staging':
         S3_BUCKET = STAGING_S3_BUCKET
