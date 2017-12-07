@@ -149,6 +149,7 @@ elex config
 NEXT_ELECTION_DATE = '2017-12-12'
 # TODO: Remove test flag
 ELEX_FLAGS = '--national-only --test'
+ELEX_FTP_FLAGS = '--states AL'
 
 ELEX_RESET_FLAGS = '--national-only --test --set-zero-counts'
 

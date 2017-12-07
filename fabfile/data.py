@@ -16,14 +16,14 @@ logger.setLevel(app_config.LOG_LEVEL)
 
 
 @task
-def bootstrap_db(testfilepath=None):
+def bootstrap_db(csvpath=None):
     """
     Build the database.
     """
     create_db()
     create_tables()
-    if testfilepath:
-        load_test_csv(testfilepath)
+    if csvpath:
+        load_csv(csvpath)
     else:
         load_results()
     create_calls()
@@ -103,16 +103,30 @@ def load_results(mode='default'):
 
 
 @task
-def load_test_csv(path):
+def load_csv(path):
     """
     Load flat csv gathered from a previous elex run
     """
     delete_results()
     with shell_env(**app_config.database):
-        with hide('output', 'running'):
-            local('cat {0} | psql {1} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(path, app_config.database['PGDATABASE']))
+        local('cat {0} | psql {1} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(path, app_config.database['PGDATABASE']))
 
     logger.info('test results loaded')
+
+
+@task
+def fetch_ftp_results():
+    """
+    Load flat csv gathered from a previous elex run
+    """
+    flags = app_config.ELEX_FTP_FLAGS
+    cmd = 'python elex_ftp {0} > {1}/ftp_results.csv'.format(
+        flags,
+        app_config.ELEX_OUTPUT_FOLDER)
+    with hide('output', 'running'):
+        local(cmd)
+
+    logger.info('ftp results fetched')
 
 
 @task
