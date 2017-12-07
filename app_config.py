@@ -104,7 +104,6 @@ SHARING
 """
 SHARE_URL = 'http://%s/%s/' % (PRODUCTION_S3_BUCKET, PROJECT_SLUG)
 
-
 """
 SERVICES
 """
@@ -155,7 +154,27 @@ ELEX_RESET_FLAGS = '--national-only --test --set-zero-counts'
 LOAD_RESULTS_INTERVAL = 10
 DATA_OUTPUT_FOLDER = '.rendered'
 
-SELECTED_HOUSE_RACES = []
+"""
+Results config
+"""
+RESULTS = (
+    {
+        # Output filename
+        'filename': 'alabama-results.json',
+        # A function that returns a set of Peewee models that will be baked
+        'query': {
+            'module': 'fabfile.query',
+            'function': 'select_senate_results'
+        # A function that takes the Peewee models and returns a JSON serializeable
+        # dictionary or list with the results in the desired shape, with the desired
+        # fields
+        },
+        'transform': {
+            'module': 'fabfile.render',
+            'function': '_serialize_results'
+        }
+    },
+)
 
 """
 Utilities

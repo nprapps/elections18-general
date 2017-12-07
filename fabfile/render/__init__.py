@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # _*_ coding:utf-8 _*_
-
 import app_config
 import logging
 import simplejson as json
@@ -9,8 +8,9 @@ from datetime import datetime
 from fabric.api import local, task
 from models import models
 from playhouse.shortcuts import model_to_dict
+import importlib
+from .. import utils
 
-from . import utils
 
 logging.basicConfig(format=app_config.LOG_FORMAT)
 logger = logging.getLogger(__name__)
@@ -63,16 +63,6 @@ CANDIDATES_SELECTIONS = (
 )
 
 
-def _select_senate_results():
-    """Returns Peewee model instances for U.S. Senate results"""
-    results = models.Result.select().where(
-        models.Result.level == 'state',
-        models.Result.officename == 'U.S. Senate'
-    )
-
-    return results
-
-
 def _serialize_results(results, selections, key='raceid'):
     """
     Returns a collection of results that can be serialized as JSON.
@@ -121,12 +111,14 @@ def _serialize_results(results, selections, key='raceid'):
 
 
 @task
-def render_senate_results():
+def render_results(config):
     """Render U.S. Senate results to JSON"""
-    results = _select_senate_results()
-
-    serialized_results = _serialize_results(results, COMMON_SELECTIONS)
-    _write_json_file(serialized_results, 'alabama-test-results.json')
+    query = importlib.import_module(config['query']['module'])
+    transform = importlib.import_module(config['transform']['module'])
+    results = getattr(query, config['query']['function'])()
+    serialized_results = getattr(transform, config['transform']['function'])(
+        results, COMMON_SELECTIONS)
+    _write_json_file(serialized_results, config['filename'])
 
 
 def _override_last_updated(serialized_results):
@@ -157,4 +149,5 @@ def render():
     """Render all results to JSON files"""
     local('rm -rf {0}'.format(app_config.DATA_OUTPUT_FOLDER))
     local('mkdir {0}'.format(app_config.DATA_OUTPUT_FOLDER))
-    render_senate_results()
+    for config in app_config.RESULTS:
+        render_results(config)
