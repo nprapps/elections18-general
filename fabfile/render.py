@@ -5,6 +5,7 @@ import app_config
 import logging
 import simplejson as json
 
+from datetime import datetime
 from fabric.api import local, task
 from models import models
 from playhouse.shortcuts import model_to_dict
@@ -109,6 +110,7 @@ def _serialize_results(results, selections, key='raceid'):
             serialized_results['results'][dict_key] = {
                 k: result_dict[k] for k in RACE_SELECTIONS
             }
+            _override_last_updated(serialized_results['results'][dict_key])
             serialized_results['results'][dict_key]['candidates'] = []
 
         serialized_results['results'][dict_key]['candidates'].append({
@@ -125,6 +127,14 @@ def render_senate_results():
 
     serialized_results = _serialize_results(results, COMMON_SELECTIONS)
     _write_json_file(serialized_results, 'alabama-test-results.json')
+
+
+def _override_last_updated(serialized_results):
+    """Use the AP lastupdated timestamp when results are available
+    In other case use the execution timestamp
+    """
+    if serialized_results['precinctsreporting'] == 0:
+        serialized_results['lastupdated'] = datetime.utcnow()
 
 
 def _write_json_file(serialized_results, filename):
