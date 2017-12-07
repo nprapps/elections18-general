@@ -92,33 +92,30 @@ def _serialize_results(results, selections, key='raceid'):
         Collection of results as a dictionary.
 
     """
-    # TODO: Do we need this context manager? `ctx` is never used.
-    # - ghing@npr.org
-    with models.db.execution_context() as ctx:
-        serialized_results = {
-            'results': {}
-        }
+    serialized_results = {
+        'results': {}
+    }
 
-        for result in results:
-            result_dict = model_to_dict(result, backrefs=True, only=selections)
-            # Add custom npr calculated data
-            result_dict['winner'] = result.is_npr_winner()
-            result_dict['nprformat_precinctsreportingpct'] = (
-                result.nprformat_precinctsreportingpct()
-            )
+    for result in results:
+        result_dict = model_to_dict(result, backrefs=True, only=selections)
+        # Add custom npr calculated data
+        result_dict['winner'] = result.is_npr_winner()
+        result_dict['nprformat_precinctsreportingpct'] = (
+            result.nprformat_precinctsreportingpct()
+        )
 
-            dict_key = result_dict[key]
-            if dict_key not in serialized_results['results']:
-                serialized_results['results'][dict_key] = {
-                    k: result_dict[k] for k in RACE_SELECTIONS
-                }
-                serialized_results['results'][dict_key]['candidates'] = []
+        dict_key = result_dict[key]
+        if dict_key not in serialized_results['results']:
+            serialized_results['results'][dict_key] = {
+                k: result_dict[k] for k in RACE_SELECTIONS
+            }
+            serialized_results['results'][dict_key]['candidates'] = []
 
-            serialized_results['results'][dict_key]['candidates'].append({
-                k: result_dict[k] for k in CANDIDATES_SELECTIONS
-            })
+        serialized_results['results'][dict_key]['candidates'].append({
+            k: result_dict[k] for k in CANDIDATES_SELECTIONS
+        })
 
-        return serialized_results
+    return serialized_results
 
 
 @task
