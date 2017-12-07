@@ -34,7 +34,7 @@ def create_db():
     with settings(warn_only=True), hide('output', 'running'):
         if env.get('settings'):
             execute('servers.stop_service', 'uwsgi')
-            execute('servers.stop_service', 'deploy')
+            execute('servers.stop_service', 'fetch_and_publish_results')
 
         with shell_env(**app_config.database):
             local('dropdb --if-exists %s' % app_config.database['PGDATABASE'])
@@ -48,7 +48,7 @@ def create_db():
 
         if env.get('settings'):
             execute('servers.start_service', 'uwsgi')
-            execute('servers.start_service', 'deploy')
+            execute('servers.start_service', 'fetch_and_publish_results')
 
 
 @task
