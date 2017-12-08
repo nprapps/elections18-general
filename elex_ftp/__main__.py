@@ -6,8 +6,8 @@ import glob
 import itertools
 import os
 import time
-import elex_ftp.states as states
-import elex_ftp.utils as utils
+import states
+import utils
 
 import untangle
 
@@ -70,7 +70,7 @@ def parse_race(race_path):
     for c in obj.Vote.Race.ReportingUnit.Candidate:
         cand = dict(race_data)
         cand['candidateid'] = c['ID']
-        cand['candidate_unique_id'] = "polid-%s" % c['PolID']
+        cand['id'] = "%s-polid-%s-%s" % (cand['raceid'], c['PolID'], cand['reportingunitid'])
         cand['polid'] = c['PolID']
         cand['votecount'] = c['VoteCount']
         cand['last'] = c['Last']

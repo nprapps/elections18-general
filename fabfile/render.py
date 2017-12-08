@@ -133,7 +133,7 @@ def _override_last_updated(serialized_results):
     """Use the AP lastupdated timestamp when results are available
     In other case use the execution timestamp
     """
-    if serialized_results['precinctsreporting'] == 0:
+    if serialized_results['precinctsreporting'] == 0 or serialized_results['lastupdated'] == None:
         serialized_results['lastupdated'] = datetime.utcnow()
 
 

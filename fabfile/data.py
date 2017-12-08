@@ -109,7 +109,8 @@ def load_csv(path):
     """
     delete_results()
     with shell_env(**app_config.database):
-        local('cat {0} | psql {1} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(path, app_config.database['PGDATABASE']))
+        with hide('output', 'running'):
+            local('cat {0} | psql {1} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(path, app_config.database['PGDATABASE']))
 
     logger.info('test results loaded')
 

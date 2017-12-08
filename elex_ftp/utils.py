@@ -1,7 +1,7 @@
 import csv
 import sys
 
-import elex_ftp.fields as fields
+import fields
 
 def output_csv(output):
     """
