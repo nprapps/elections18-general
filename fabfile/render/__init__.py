@@ -8,7 +8,6 @@ from datetime import datetime
 from fabric.api import local, task
 from models import models
 from playhouse.shortcuts import model_to_dict
-import importlib
 from .. import utils
 
 
@@ -63,7 +62,7 @@ CANDIDATES_SELECTIONS = (
 )
 
 
-def _serialize_results(results, selections, key='raceid'):
+def serialize_results(results, selections, key='raceid'):
     """
     Returns a collection of results that can be serialized as JSON.
 
@@ -113,11 +112,10 @@ def _serialize_results(results, selections, key='raceid'):
 @task
 def render_results(config):
     """Render U.S. Senate results to JSON"""
-    query = importlib.import_module(config['query']['module'])
-    transform = importlib.import_module(config['transform']['module'])
-    results = getattr(query, config['query']['function'])()
-    serialized_results = getattr(transform, config['transform']['function'])(
-        results, COMMON_SELECTIONS)
+    query = utils.import_string(config['query'])
+    transform = utils.import_string(config['transform'])
+    results = query()
+    serialized_results = transform(results, COMMON_SELECTIONS)
     _write_json_file(serialized_results, config['filename'])
 
 

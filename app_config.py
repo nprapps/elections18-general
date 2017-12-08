@@ -163,17 +163,11 @@ RESULTS = (
         # Output filename
         'filename': 'alabama-results.json',
         # A function that returns a set of Peewee models that will be baked
-        'query': {
-            'module': 'fabfile.query',
-            'function': 'select_senate_results'
+        'query': 'fabfile.query.select_senate_results',
         # A function that takes the Peewee models and returns a JSON serializeable
         # dictionary or list with the results in the desired shape, with the desired
         # fields
-        },
-        'transform': {
-            'module': 'fabfile.render',
-            'function': '_serialize_results'
-        }
+        'transform': 'fabfile.render.serialize_results'
     },
 )
 
