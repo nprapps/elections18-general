@@ -8,6 +8,7 @@ from pytz import timezone
 import simplejson as json
 from time import time
 
+from importlib import import_module
 from boto.s3.connection import OrdinaryCallingFormat
 from fabric.api import local, task
 
@@ -125,7 +126,31 @@ def ap_time_period_filter(value):
     periods = '.'.join(value_year.strftime('%p')) + '.'
     return periods.lower()
 
+
 def _set_timezone(value):
     datetime_obj_utc = value.replace(tzinfo=timezone('GMT'))
     datetime_obj_est = datetime_obj_utc.astimezone(timezone('US/Eastern'))
     return datetime_obj_est
+
+
+def import_string(dotted_path):
+    """
+    Import a dotted module path and return the attribute/class
+    designated by the last name in the path.
+    Raise ImportError if the import failed.
+    """
+    try:
+        module_path, class_name = dotted_path.rsplit('.', 1)
+    except ValueError as err:
+        raise ImportError(
+            "{0} doesn't look like a module path".format(
+                dotted_path)) from err
+
+    module = import_module(module_path)
+
+    try:
+        return getattr(module, class_name)
+    except AttributeError as err:
+        raise ImportError(
+            "Module {0} does not define a {1} attribute/class".format(
+                module_path, class_name)) from err
