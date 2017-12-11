@@ -167,7 +167,7 @@ RESULTS = (
         # A function that takes the Peewee models and returns a JSON serializeable
         # dictionary or list with the results in the desired shape, with the desired
         # fields
-        'transform': 'fabfile.render.serialize_results'
+        'transform': 'fabfile.transform.serialize_results'
     },
 )
 
