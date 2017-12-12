@@ -147,10 +147,10 @@ elex config
 """
 NEXT_ELECTION_DATE = '2017-12-12'
 # TODO: Remove test flag
-ELEX_FLAGS = '--national-only --test'
+ELEX_FLAGS = '--national-only'
 ELEX_FTP_FLAGS = '--states AL'
 
-ELEX_RESET_FLAGS = '--national-only --test --set-zero-counts'
+ELEX_RESET_FLAGS = '--national-only --set-zero-counts'
 
 LOAD_RESULTS_INTERVAL = 10
 DATA_OUTPUT_FOLDER = '.rendered'
@@ -161,7 +161,7 @@ Results config
 RESULTS = (
     {
         # Output filename
-        'filename': 'test11-alabama-results.json',
+        'filename': 'alabama-results.json',
         # A function that returns a set of Peewee models that will be baked
         'query': 'fabfile.query.select_senate_results',
         # A function that takes the Peewee models and returns a JSON serializeable
