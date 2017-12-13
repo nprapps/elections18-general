@@ -11,6 +11,8 @@ elections17-alabama
 * [What's in here?](#whats-in-here)
 * [Bootstrap the project](#bootstrap-the-project)
 * [Data flow](#data-flow)
+* [Output JSON](#output-json)
+* [Configuration](#configuration)
 * [Hide project secrets](#hide-project-secrets)
 * [Save media assets](#save-media-assets)
 * [Add a page to the site](#add-a-page-to-the-site)
@@ -135,6 +137,246 @@ Hide project secrets
 Project secrets should **never** be stored in ``app_config.py`` or anywhere else in the repository. They will be leaked to the client if you do. Instead, always store passwords, keys, etc. in environment variables and document that they are needed here in the README.
 
 Any environment variable that starts with ``$PROJECT_SLUG_`` will be automatically loaded when ``app_config.get_secrets()`` is called.
+
+Output JSON
+-----------
+
+The result loading and baking daemon outputs a JSON file to S3.
+
+### Example
+
+```
+{
+    "results": {
+        "1683": {
+            "candidates": [
+                {
+                    "first": "Doug",
+                    "last": "Jones",
+                    "party": "Dem",
+                    "votecount": 0,
+                    "votepct": 0.0,
+                    "winner": false
+                },
+                {
+                    "first": "Roy",
+                    "last": "Moore",
+                    "party": "GOP",
+                    "votecount": 0,
+                    "votepct": 0.0,
+                    "winner": false
+                },
+                {
+                    "first": null,
+                    "last": "Total Write-Ins",
+                    "party": "NPD",
+                    "votecount": 0,
+                    "votepct": 0.0,
+                    "winner": false
+                }
+            ],
+            "lastupdated": "Nov. 29, 2017, 2:30 p.m.",
+            "level": "state",
+            "nprformat_precinctsreportingpct": "0%",
+            "officename": "U.S. Senate",
+            "precinctsreporting": 0,
+            "precinctstotal": 2220,
+            "statename": "Alabama",
+            "statepostal": "AL"
+        }
+    }
+}
+```
+
+### Philosophy
+
+We've tried to make the output JSON compact to minimize the amount of data that a user needs to download to retrieve the results.
+
+When possible, we also try to pre-format data, such as dates or percentages, in the JSON to limit the size and complexity of front-end code.
+
+### Race IDs
+
+The properties nested under the `results` property, `1683` in the example above, are the AP race IDs. Using a unique identifier as a key for each race allows the front end code to quicky retrieve results for a given race without iteration. Be aware that it is possible for the AP race IDs to change prior to election night. The final IDs will be sent over with the zeroed results on election day. If they differ from the IDs used during testing, front-end configuration or code that references the ID will need to be updated.
+
+### Race Fields
+
+#### `candidates`
+
+An array of candidate results.
+
+#### `lastupdated`
+
+Formatted timestamp reflecting:
+
+* If there are no precincts reporting, the time of the last pull from the AP API
+* If there is at least one precinct reporting, the time the data was last updated as reported by the AP.
+
+**Example:** `Nov. 29, 2017, 2:30 p.m.`.
+
+#### `level`
+
+The reporting level of the results.
+
+TODO: Document other possible levels. I think this is documented in the elex docs.
+
+**Example:** `state`
+
+#### `nprformat\_precinctsreportingpct`
+
+String containing formatted percentage of precincts reporting:.
+
+* If the percentage of precincts reporting is less than 1%, `<1%`.
+* If the percentage is less than 99%, the percentage value will be displayed, e.g. `15.1%`.
+* If the percentage is greater than 99% but less than 100%, `>99%`.
+
+#### `officename`
+
+Name of the office for this election.
+
+**Example:** `U.S. Senate`
+
+#### `precinctsreporting`
+
+Integer representing number of precincts reporting results.
+
+**Example:** `1`
+
+#### `precinctstotal`
+
+Integer representing total number of precincts that can report results for this election.
+
+**Example:** `2220`
+
+#### `statename`
+
+Name of state for these election results.
+
+**Example:** `Alabama`
+
+#### `statepostal`
+
+Abbreviation for Alabama.
+
+**Example:** `AL`
+
+### Candidate Fields
+
+These fields represent results for individual candidates and are collected under the `candidates` property of a race record.
+
+#### `first`
+
+String containing first name of candidate or `null` for pseudo-candidates.
+
+**Example:** "Doug"
+
+#### `last`
+
+String containing last name of candidate or identifier of pseudo-candidates.
+
+**Examples:**
+
+* `Jones`
+* `Total Write-Ins`
+
+#### `votecount`
+
+Integer representing total number of votes received by the candidate.
+
+**Example:** `0`
+
+#### `votepct`
+
+Float representing percentage of total votes won by the candidate.
+
+**Example:** `0.0`
+
+#### `winner`
+
+Boolean representing whether this candidate has been called as the winner. Defaults to the AP call but will be overridden by the NPR call if specified in the admin.
+
+**Example:** `false`
+
+Configuration
+-------------
+
+This app shares many of the configuration variables common to apps based on [NPR's App Template](https://github.com/nprapps/app-template). This section documents application-specific configuration variables.
+
+In most cases, configuration is through variables defined in the `app\_config` module in `app\_config.py`. However, some configuration may be defined through environment variables.
+
+### AP\_API\_KEY
+
+API key used by [`elex`](http://elex.readthedocs.io/) to authenticate to the Associated Press' results API.
+
+Type: Environment variable
+
+### ELEX\_FLAGS
+
+Command line flags for the `elex` command. See the [elex cli documentation](http://elex.readthedocs.io/en/stable/cli.html) for available flags.
+
+Type: `app\_config` variable
+
+Example: `'--national-only'`
+
+### ELEX\_FTP\_FLAGS
+
+Command line flags for the `elex\_ftp` command, which is a vendorized version of [elex-ftp-loader](https://github.com/newsdev/elex-ftp-loader). This is available as a fallback if there are issues retrieving results through AP's API. However, the API is the preferred method of retrieving results.
+
+Type: `app\_config` variable
+
+Example: `'--states AL'`
+
+### ELEX\_RESET\_FLAGS
+
+Command line flags for the `elex` command used to force zeroed-out results with `fab data.load\_results:mode=zeroes` . See the [elex cli documentation](http://elex.readthedocs.io/en/stable/cli.html) for more information.
+
+Type: `app\_config` variable
+
+Example: `'--national-only --set-zero-counts'`
+
+### LOAD\_RESULTS\_INTERVAL
+
+Time, in seconds, between requests to the AP API. The AP API is throttled, so you can't set this to be too small.
+
+Type: `app\_config` variable
+
+Example: `10`
+
+### DATA\_OUTPUT\_FOLDER
+
+Path to folder where results JSON is rendered before being uploaded to S3.
+
+Type: `app\_config` variable
+
+Example: `'.rendered'`
+
+### RESULTS
+
+Iterable of configurations to retrieve results from the database and render as JSON.
+
+Each item of the iterable should be a dictionary with the following keys:
+
+* `filename`: String containing the filename of the rendered JSON file.
+* `query`: String containing the dotted path, relative to the root of the project, to a function that returns an iterable of `Result` model instances that will renderd to JSON. ORM query logic to filter results from the database should go inside that function.
+* `transform`: String containing the dotted path, relative to the root of the project, to a function that takes an iterable of `Result` model instances and returns a JSON-serializeable object representing the collection of results. This is where you can add fields not computed through the ORM, or re-shape the wrapping object for the results list.
+
+Type: `app\_config` variable
+
+Example:
+
+```
+RESULTS = (
+    {
+        # Output filename
+        'filename': 'alabama-results.json',
+        # A function that returns a set of Peewee models that will be baked
+        'query': 'fabfile.query.select_senate_results',
+        # A function that takes the Peewee models and returns a JSON serializeable
+        # dictionary or list with the results in the desired shape, with the desired
+        # fields
+        'transform': 'fabfile.transform.serialize_results'
+    },
+)
+```
 
 Save media assets
 -----------------
