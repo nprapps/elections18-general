@@ -285,6 +285,16 @@ def restart_service(service):
     sudo('service %s restart' % service_name)
 
 
+@task
+def status_service(service):
+    """
+    Start a service on the server.
+    """
+    require('settings', provided_by=['production', 'staging'])
+    service_name = _get_installed_service_name(service)
+    sudo('service %s status' % service_name)
+
+
 """
 Fabcasting
 """
