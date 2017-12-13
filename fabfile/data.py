@@ -112,7 +112,7 @@ def load_csv(path):
         with hide('output', 'running'):
             local('cat {0} | psql {1} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(path, app_config.database['PGDATABASE']))
 
-    logger.info('test results loaded')
+    logger.info('custom csv results loaded')
 
 
 @task
