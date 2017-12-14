@@ -26,6 +26,7 @@ elections17-alabama
 * [Run Javascript tests](#run-javascript-tests)
 * [Compile static assets](#compile-static-assets)
 * [Test the rendered app](#test-the-rendered-app)
+* [Provisioning servers](#provisioning-servers)
 * [Deploy to S3](#deploy-to-s3)
 * [Deploy to EC2](#deploy-to-ec2)
 * [Install cron jobs](#install-cron-jobs)
@@ -607,6 +608,39 @@ If you want to test the app once you've rendered it out, just use the Python web
 cd www
 python -m SimpleHTTPServer
 ```
+
+Provisioning servers
+--------------------
+
+We need to create instances for our staging and our production environments, for each environment we need to setup an EC2 instance and a RDS instance for our database that we use to store the results coming from the AP API through elex.
+
+This project we did not have strong requirements in terms of performance nor data loads so we chose medium sized virtual machines...for other elections a new assessment will need to be made on data throughput and
+
+### EC2 instance configuration
+
+We use Ubuntu 16.04 LTS images for python3 projects.
+
+* Instance type: t2.medium
+* Storage: 10GB
+
+### Additional needed software
+
+* Python3 & virtualenv
+* Node6
+* Upstart - Due to our configuration files format
+* Nginx
+* uwsgi
+
+_Note: If you are at NPR we can use our AMI that already contains this configuration `python3 webserver`_
+
+
+### RDS instance configuration
+
+* Instance type: db.t2.medium
+* Database engine: PostgreSQL 9.6.3
+
+_Note: If you are at NPR we normally do not create the actual dabatase through the console to test on the staging and production environments our DB bootstrapping scripts._
+
 
 Deploy to S3
 ------------
