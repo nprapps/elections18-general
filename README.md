@@ -16,6 +16,7 @@ elections17-alabama
 * [Hide project secrets](#hide-project-secrets)
 * [Save media assets](#save-media-assets)
 * [Add a page to the site](#add-a-page-to-the-site)
+* [Deployment](#deployment)
 * [Run the project](#run-the-project)
 * [COPY configuration](#copy-configuration)
 * [COPY editing](#copy-editing)
@@ -113,7 +114,7 @@ The core functionality of this app is to fetch results from the AP elections API
 
 ### Upstart starts a service that runs Fabric tasks
 
-When the project is deployed, a service is created named `fetch_and_publish_results` by copying `confs/fetch_and_publish_results.conf` to `/etc/init/fetch_and_publish_results`.  Once deployed, this service can be started with `fab production servers.start_service:fetch_and_publish_results` or  stopped with `fab production servers.stop_service:fetch_and_publish_results`.
+When the project is deployed, a service is created named `fetch_and_publish_results` by copying `confs/fetch_and_publish_results.conf` to `/etc/init/fetch_and_publish_results`.  Once deployed, this service can be started and stopped using with Fabric tasks.
 
 The `fetch_and_publish_results` service calls `run_on_server.sh` to initialize the Python and shell environment and then runs the `daemons.fetch_and_publish_results` Fabric task.  This task just runs the `daemons.main` Fabric task.
 
@@ -403,8 +404,17 @@ A site can have any number of rendered pages, each with a corresponding template
 * Add a corresponding view function to ``app.py``. Decorate it with a route to the page name, i.e. ``@app.route('/filename.html')``
 * By convention only views that end with ``.html`` and do not start with ``_``  will automatically be rendered when you call ``fab render``.
 
+Deployment
+----------
+
+This app can be deployed to EC2 using Fabric in a manner to other NPR apps that run on servers.
+
+TODO: Document this in greater detail.
+
 Run the project
 ---------------
+
+### Local development server
 
 A flask app is used to run the project locally. It will automatically recompile templates and assets on demand.
 
@@ -414,6 +424,20 @@ fab app
 ```
 
 Visit [localhost:8000](http://localhost:8000) in your browser.
+
+### Results loader daemon
+
+To start the daemon that loads results into the database, bakes them to JSON and publishes the JSON to S3, run this Fabric task:
+
+```
+fab production servers.start_service:fetch_and_publish_results
+```
+
+To stop the daemon, run this Fabric task:
+
+```
+fab production servers.stop_service:fetch_and_publish_results
+```
 
 COPY configuration
 ------------------
