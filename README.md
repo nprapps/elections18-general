@@ -18,6 +18,7 @@ elections17-alabama
 * [Add a page to the site](#add-a-page-to-the-site)
 * [Deployment](#deployment)
 * [Run the project](#run-the-project)
+* [Admin interface](#admin-interface)
 * [COPY configuration](#copy-configuration)
 * [COPY editing](#copy-editing)
 * [Open Linked Google Spreadsheet](#open-linked-google-spreadsheet)
@@ -438,6 +439,13 @@ To stop the daemon, run this Fabric task:
 ```
 fab production servers.stop_service:fetch_and_publish_results
 ```
+
+Admin interface
+---------------
+
+There is a web-based admin interface that can be used to call winners in races. The winners called through the admin will override the winner in the AP results and will be reflected in the published results JSON.
+
+TODO: Document this in greater detail.
 
 COPY configuration
 ------------------
