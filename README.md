@@ -28,12 +28,8 @@ elections17-alabama
 * [Run Javascript tests](#run-javascript-tests)
 * [Compile static assets](#compile-static-assets)
 * [Test the rendered app](#test-the-rendered-app)
-* [Deploy to S3](#deploy-to-s3)
-* [Deploy to EC2](#deploy-to-ec2)
-* [Install cron jobs](#install-cron-jobs)
 * [Install web services](#install-web-services)
 * [Run a remote fab command](#run-a-remote-fab-command)
-* [Report analytics](#report-analytics)
 
 What is this?
 -------------
@@ -62,7 +58,6 @@ The project contains the following folders and important files:
 * ``data`` -- Data files, such as those used to generate HTML.
 * ``fabfile`` -- [Fabric](http://docs.fabfile.org/en/latest/) commands for automating setup, deployment, data processing, etc.
 * ``etc`` -- Miscellaneous scripts and metadata for project bootstrapping.
-* ``jst`` -- Javascript ([Underscore.js](http://documentcloud.github.com/underscore/#template)) templates.
 * ``less`` -- [LESS](http://lesscss.org/) files, will be compiled to CSS and concatenated for deployment.
 * ``templates`` -- HTML ([Jinja2](http://jinja.pocoo.org/docs/)) templates, to be compiled locally.
 * ``tests`` -- Python unit tests.
@@ -72,12 +67,9 @@ The project contains the following folders and important files:
 * ``www/test`` -- Javascript tests and supporting files.
 * ``app.py`` -- A [Flask](http://flask.pocoo.org/) app for rendering the project locally.
 * ``app_config.py`` -- Global project configuration for scripts, deployment, etc.
-* ``copytext.py`` -- Code supporting the [Editing workflow](#editing-workflow)
-* ``crontab`` -- Cron jobs to be installed as part of the project.
-* ``public_app.py`` -- A [Flask](http://flask.pocoo.org/) app for running server-side code.
 * ``render_utils.py`` -- Code supporting template rendering.
 * ``requirements.txt`` -- Python requirements.
-* ``static.py`` -- Static Flask views used in both ``app.py`` and ``public_app.py``.
+* ``static.py`` -- Static Flask views used in ``app.py``.
 
 Bootstrap the project
 ---------------------
@@ -410,7 +402,26 @@ Deployment
 
 This app can be deployed to EC2 using Fabric in a manner to other NPR apps that run on servers.
 
-TODO: Document this in greater detail.
+The commands to execute in order to deploy the project to AWS EC2 are:
+
+### First time
+
+* In ``app_config.py`` set ``DEPLOY_TO_SERVERS`` to ``True``.
+* Run ``fab staging master servers.setup`` to configure the server.
+* Initialize the RDS DB ``fab staging master servers.fabcast:data.bootstrap_db``
+
+Once we have setup our servers we will need to install the webservices to support the admin that will allow us to override winner calls from AP, follow the instructions in [Install web services](#install-web-services). More details on the Admin can be found [here](#admin-interface)
+
+### Update server after code changes
+
+* Verify that ``DEPLOY_TO_SERVERS`` is set to ``True`` in ``app_config.py``.
+* Run ``fab staging master servers.checkout_latest`` to update codebase on the server
+
+### Update DB after change in ORM models
+
+* Verify that ``DEPLOY_TO_SERVERS`` is set to ``True`` in ``app_config.py``.
+* Run ``fab staging master servers.checkout_latest`` to update codebase on the server
+* Reset the RDS DB ``fab staging master servers.fabcast:data.bootstrap_db``
 
 Run the project
 ---------------
@@ -445,7 +456,21 @@ Admin interface
 
 There is a web-based admin interface that can be used to call winners in races. The winners called through the admin will override the winner in the AP results and will be reflected in the published results JSON.
 
-TODO: Document this in greater detail.
+In the admin we can decide whether or not we accept AP calls for winners in a given race.
+
+For example if you are running the local webserver you can check the admin for senate races by visiting `http://localhost:8000/elections17-alabama/calls/senate/`
+
+![screenshot Admin][screenshot]
+
+If we decide to not accept AP calls for winners in a given race we can then make a manual call ourselves for a given candidate in the race and that will be reflected in the published results JSON.
+
+For example a manual call for `Doug Jones` would look like this:
+
+![screenshot manual call][manual]
+
+[screenshot]: readme-assets/admin1.png
+[manual]: readme-assets/admin2.png
+
 
 COPY configuration
 ------------------
@@ -640,49 +665,6 @@ cd www
 python -m SimpleHTTPServer
 ```
 
-Deploy to S3
-------------
-
-```
-fab staging master deploy
-```
-
-Deploy to EC2
--------------
-
-You can deploy to EC2 for a variety of reasons. We cover two cases: Running a dynamic web application (`public_app.py`) and executing cron jobs (`crontab`).
-
-Servers capable of running the app can be setup using our [servers](https://github.com/nprapps/servers) project.
-
-For running a Web application:
-
-* In ``app_config.py`` set ``DEPLOY_TO_SERVERS`` to ``True``.
-* Also in ``app_config.py`` set ``DEPLOY_WEB_SERVICES`` to ``True``.
-* Run ``fab staging master servers.setup`` to configure the server.
-* Run ``fab staging master deploy`` to deploy the app.
-
-For running cron jobs:
-
-* In ``app_config.py`` set ``DEPLOY_TO_SERVERS`` to ``True``.
-* Also in ``app_config.py``, set ``INSTALL_CRONTAB`` to ``True``
-* Run ``fab staging master servers.setup`` to configure the server.
-* Run ``fab staging master deploy`` to deploy the app.
-
-You can configure your EC2 instance to both run Web services and execute cron jobs; just set both environment variables in the fabfile.
-
-Install cron jobs
------------------
-
-Cron jobs are defined in the file `crontab`. Each task should use the `cron.sh` shim to ensure the project's virtualenv is properly activated prior to execution. For example:
-
-```
-* * * * * ubuntu bash /home/ubuntu/apps/elections16_general/repository/cron.sh fab $DEPLOYMENT_TARGET cron_jobs.test
-```
-
-To install your crontab set `INSTALL_CRONTAB` to `True` in `app_config.py`. Cron jobs will be automatically installed each time you deploy to EC2.
-
-The cron jobs themselves should be defined in `fabfile/cron_jobs.py` whenever possible.
-
 Install web services
 ---------------------
 
@@ -712,20 +694,3 @@ fab staging master servers.fabcast:deploy
 ```
 
 If any of the commands you run themselves require executing on the server, the server will SSH into itself to run them.
-
-Analytics
----------
-
-The Google Analytics events tracked in this application are:
-
-|Category|Action|Label|Value|
-|--------|------|-----|-----|
-|elections17-alabama|tweet|`location`||
-|elections17-alabama|facebook|`location`||
-|elections17-alabama|email|`location`||
-|elections17-alabama|new-comment||
-|elections17-alabama|open-share-discuss||
-|elections17-alabama|close-share-discuss||
-|elections17-alabama|summary-copied||
-|elections17-alabama|featured-tweet-action|`action`|
-|elections17-alabama|featured-facebook-action|`action`|
