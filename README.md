@@ -108,7 +108,7 @@ The core functionality of this app is to fetch results from the AP elections API
 
 ### Upstart starts a service that runs Fabric tasks
 
-When the project is deployed, a service is created named `fetch_and_publish_results` by copying `confs/fetch_and_publish_results.conf` to `/etc/init/fetch_and_publish_results`.  Once deployed, this service can be started and stopped using with Fabric tasks.
+When the project is deployed, a service is created named `fetch_and_publish_results` by copying `confs/fetch_and_publish_results.conf` to `/etc/init/fetch_and_publish_results`.  Once deployed, this service can be started and stopped using Fabric tasks.
 
 The `fetch_and_publish_results` service calls `run_on_server.sh` to initialize the Python and shell environment and then runs the `daemons.fetch_and_publish_results` Fabric task.  This task just runs the `daemons.main` Fabric task.
 
@@ -401,9 +401,9 @@ A site can have any number of rendered pages, each with a corresponding template
 Provisioning servers
 --------------------
 
-We need to create instances for our staging and our production environments, for each environment we need to setup an EC2 instance and a RDS instance for our database that we use to store the results coming from the AP API through elex.
+We need to create instances for both our staging and our production environments. For each environment we need to setup an EC2 instance to run the Python daemon and admin web app and a RDS instance for our database that we use to store the results coming from the AP API through elex.
 
-This project we did not have strong requirements in terms of performance nor data loads so we chose medium sized virtual machines...for other elections a new assessment will need to be made on data throughput and
+This project did not have strong requirements in terms of performance nor data loads so we chose medium sized virtual machines. For other elections a new assessment will need to be made on data throughput and storage capacity.
 
 ### EC2 instance configuration
 
@@ -415,12 +415,12 @@ We use Ubuntu 16.04 LTS images for python3 projects.
 ### Additional needed software
 
 * Python3 & virtualenv
-* Node6
+* Node.js 6
 * Upstart - Due to our configuration files format
 * Nginx
 * uwsgi
 
-_Note: If you are at NPR we can use our AMI that already contains this configuration `python3 webserver`_
+_Note: NPR users can use our AMI that already contains this configuration, `python3 webserver`_
 
 
 ### RDS instance configuration
@@ -428,14 +428,12 @@ _Note: If you are at NPR we can use our AMI that already contains this configura
 * Instance type: db.t2.medium
 * Database engine: PostgreSQL 9.6.3
 
-_Note: If you are at NPR we normally do not create the actual dabatase through the AWS console to test on staging and production environments our DB bootstrapping scripts._
+_Note: At NPR we normally do not create the actual dabatase through the AWS console in order to test our database bootstrapping scripts in the staging and production environments._
 
 Deployment
 ----------
 
 This app can be deployed to EC2 using Fabric in a manner to other NPR apps that run on servers.
-
-The commands to execute in order to deploy the project to AWS EC2 are:
 
 ### First time
 
