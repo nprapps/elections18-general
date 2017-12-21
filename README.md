@@ -405,14 +405,14 @@ We need to create instances for our staging and our production environments, for
 
 This project we did not have strong requirements in terms of performance nor data loads so we chose medium sized virtual machines...for other elections a new assessment will need to be made on data throughput and
 
-### EC2 instance configuration
+### EC2 instance configuration
 
 We use Ubuntu 16.04 LTS images for python3 projects.
 
 * Instance type: t2.medium
 * Storage: 10GB
 
-### Additional needed software
+### Additional needed software
 
 * Python3 & virtualenv
 * Node6
@@ -423,7 +423,7 @@ We use Ubuntu 16.04 LTS images for python3 projects.
 _Note: If you are at NPR we can use our AMI that already contains this configuration `python3 webserver`_
 
 
-### RDS instance configuration
+### RDS instance configuration
 
 * Instance type: db.t2.medium
 * Database engine: PostgreSQL 9.6.3
@@ -437,7 +437,7 @@ This app can be deployed to EC2 using Fabric in a manner to other NPR apps that 
 
 The commands to execute in order to deploy the project to AWS EC2 are:
 
-### First time
+### First time
 
 * In ``app_config.py`` set ``DEPLOY_TO_SERVERS`` to ``True``.
 * Run ``fab staging master servers.setup`` to configure the server.
@@ -445,12 +445,12 @@ The commands to execute in order to deploy the project to AWS EC2 are:
 
 Once we have setup our servers we will need to install the webservices to support the admin that will allow us to override winner calls from AP, follow the instructions in [Install web services](#install-web-services). More details on the Admin can be found [here](#admin-interface)
 
-### Update server after code changes
+### Update server after code changes
 
 * Verify that ``DEPLOY_TO_SERVERS`` is set to ``True`` in ``app_config.py``.
 * Run ``fab staging master servers.checkout_latest`` to update codebase on the server
 
-### Update DB after change in ORM models
+### Update DB after change in ORM models
 
 * Verify that ``DEPLOY_TO_SERVERS`` is set to ``True`` in ``app_config.py``.
 * Run ``fab staging master servers.checkout_latest`` to update codebase on the server
