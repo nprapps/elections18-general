@@ -16,7 +16,10 @@ elections17-alabama
 * [Hide project secrets](#hide-project-secrets)
 * [Save media assets](#save-media-assets)
 * [Add a page to the site](#add-a-page-to-the-site)
+* [Provisioning servers](#provisioning-servers)
+* [Deployment](#deployment)
 * [Run the project](#run-the-project)
+* [Admin interface](#admin-interface)
 * [COPY configuration](#copy-configuration)
 * [COPY editing](#copy-editing)
 * [Open Linked Google Spreadsheet](#open-linked-google-spreadsheet)
@@ -26,13 +29,8 @@ elections17-alabama
 * [Run Javascript tests](#run-javascript-tests)
 * [Compile static assets](#compile-static-assets)
 * [Test the rendered app](#test-the-rendered-app)
-* [Provisioning servers](#provisioning-servers)
-* [Deploy to S3](#deploy-to-s3)
-* [Deploy to EC2](#deploy-to-ec2)
-* [Install cron jobs](#install-cron-jobs)
 * [Install web services](#install-web-services)
 * [Run a remote fab command](#run-a-remote-fab-command)
-* [Report analytics](#report-analytics)
 
 What is this?
 -------------
@@ -61,7 +59,6 @@ The project contains the following folders and important files:
 * ``data`` -- Data files, such as those used to generate HTML.
 * ``fabfile`` -- [Fabric](http://docs.fabfile.org/en/latest/) commands for automating setup, deployment, data processing, etc.
 * ``etc`` -- Miscellaneous scripts and metadata for project bootstrapping.
-* ``jst`` -- Javascript ([Underscore.js](http://documentcloud.github.com/underscore/#template)) templates.
 * ``less`` -- [LESS](http://lesscss.org/) files, will be compiled to CSS and concatenated for deployment.
 * ``templates`` -- HTML ([Jinja2](http://jinja.pocoo.org/docs/)) templates, to be compiled locally.
 * ``tests`` -- Python unit tests.
@@ -71,12 +68,9 @@ The project contains the following folders and important files:
 * ``www/test`` -- Javascript tests and supporting files.
 * ``app.py`` -- A [Flask](http://flask.pocoo.org/) app for rendering the project locally.
 * ``app_config.py`` -- Global project configuration for scripts, deployment, etc.
-* ``copytext.py`` -- Code supporting the [Editing workflow](#editing-workflow)
-* ``crontab`` -- Cron jobs to be installed as part of the project.
-* ``public_app.py`` -- A [Flask](http://flask.pocoo.org/) app for running server-side code.
 * ``render_utils.py`` -- Code supporting template rendering.
 * ``requirements.txt`` -- Python requirements.
-* ``static.py`` -- Static Flask views used in both ``app.py`` and ``public_app.py``.
+* ``static.py`` -- Static Flask views used in ``app.py``.
 
 Bootstrap the project
 ---------------------
@@ -114,7 +108,7 @@ The core functionality of this app is to fetch results from the AP elections API
 
 ### Upstart starts a service that runs Fabric tasks
 
-When the project is deployed, a service is created named `fetch_and_publish_results` by copying `confs/fetch_and_publish_results.conf` to `/etc/init/fetch_and_publish_results`.  Once deployed, this service can be started with `fab production servers.start_service:fetch_and_publish_results` or  stopped with `fab production servers.stop_service:fetch_and_publish_results`.
+When the project is deployed, a service is created named `fetch_and_publish_results` by copying `confs/fetch_and_publish_results.conf` to `/etc/init/fetch_and_publish_results`.  Once deployed, this service can be started and stopped using Fabric tasks.
 
 The `fetch_and_publish_results` service calls `run_on_server.sh` to initialize the Python and shell environment and then runs the `daemons.fetch_and_publish_results` Fabric task.  This task just runs the `daemons.main` Fabric task.
 
@@ -404,8 +398,66 @@ A site can have any number of rendered pages, each with a corresponding template
 * Add a corresponding view function to ``app.py``. Decorate it with a route to the page name, i.e. ``@app.route('/filename.html')``
 * By convention only views that end with ``.html`` and do not start with ``_``  will automatically be rendered when you call ``fab render``.
 
+Provisioning servers
+--------------------
+
+We need to create instances for both our staging and our production environments. For each environment we need to setup an EC2 instance to run the Python daemon and admin web app and a RDS instance for our database that we use to store the results coming from the AP API through elex.
+
+This project did not have strong requirements in terms of performance nor data loads so we chose medium sized virtual machines. For other elections a new assessment will need to be made on data throughput and storage capacity.
+
+### EC2 instance configuration
+
+We use Ubuntu 16.04 LTS images for python3 projects.
+
+* Instance type: t2.medium
+* Storage: 10GB
+
+### Additional needed software
+
+* Python3 & virtualenv
+* Node.js 6
+* Upstart - Due to our configuration files format
+* Nginx
+* uwsgi
+
+_Note: NPR users can use our AMI that already contains this configuration, `python3 webserver`_
+
+
+### RDS instance configuration
+
+* Instance type: db.t2.medium
+* Database engine: PostgreSQL 9.6.3
+
+_Note: At NPR we normally do not create the actual dabatase through the AWS console in order to test our database bootstrapping scripts in the staging and production environments._
+
+Deployment
+----------
+
+This app can be deployed to EC2 using Fabric in a manner to other NPR apps that run on servers.
+
+### First time
+
+* In ``app_config.py`` set ``DEPLOY_TO_SERVERS`` to ``True``.
+* Run ``fab staging master servers.setup`` to configure the server.
+* Initialize the RDS DB ``fab staging master servers.fabcast:data.bootstrap_db``
+
+Once we have setup our servers we will need to install the webservices to support the admin that will allow us to override winner calls from AP, follow the instructions in [Install web services](#install-web-services). More details on the Admin can be found [here](#admin-interface)
+
+### Update server after code changes
+
+* Verify that ``DEPLOY_TO_SERVERS`` is set to ``True`` in ``app_config.py``.
+* Run ``fab staging master servers.checkout_latest`` to update codebase on the server
+
+### Update DB after change in ORM models
+
+* Verify that ``DEPLOY_TO_SERVERS`` is set to ``True`` in ``app_config.py``.
+* Run ``fab staging master servers.checkout_latest`` to update codebase on the server
+* Reset the RDS DB ``fab staging master servers.fabcast:data.bootstrap_db``
+
 Run the project
 ---------------
+
+### Local development server
 
 A flask app is used to run the project locally. It will automatically recompile templates and assets on demand.
 
@@ -416,8 +468,45 @@ fab app
 
 Visit [localhost:8000](http://localhost:8000) in your browser.
 
+### Results loader daemon
+
+To start the daemon that loads results into the database, bakes them to JSON and publishes the JSON to S3, run this Fabric task:
+
+```
+fab production servers.start_service:fetch_and_publish_results
+```
+
+To stop the daemon, run this Fabric task:
+
+```
+fab production servers.stop_service:fetch_and_publish_results
+```
+
+Admin interface
+---------------
+
+There is a web-based admin interface that can be used to call winners in races. The winners called through the admin will override the winner in the AP results and will be reflected in the published results JSON.
+
+In the admin we can decide whether or not we accept AP calls for winners in a given race.
+
+For example if you are running the local webserver you can check the admin for senate races by visiting `http://localhost:8000/elections17-alabama/calls/senate/`
+
+![screenshot Admin][screenshot]
+
+If we decide to not accept AP calls for winners in a given race we can then make a manual call ourselves for a given candidate in the race and that will be reflected in the published results JSON.
+
+For example a manual call for `Doug Jones` would look like this:
+
+![screenshot manual call][manual]
+
+[screenshot]: readme-assets/admin1.png
+[manual]: readme-assets/admin2.png
+
+
 COPY configuration
 ------------------
+
+_Note: This project was first created using NPR [app-template](https://github.com/nprapps/app-template) and even though we have stripped out the unused boilerplate that came along from it, we have left the COPY functionality because for subsequent elections we can foresee the use of the COPY worklow to add meta information for an election like the expected winner, or any other information given to us by the politics team that will add value to the pure results provided by AP_
 
 This app uses a Google Spreadsheet for a simple key/value store that provides an editing workflow.
 
@@ -609,82 +698,6 @@ cd www
 python -m SimpleHTTPServer
 ```
 
-Provisioning servers
---------------------
-
-We need to create instances for our staging and our production environments, for each environment we need to setup an EC2 instance and a RDS instance for our database that we use to store the results coming from the AP API through elex.
-
-This project we did not have strong requirements in terms of performance nor data loads so we chose medium sized virtual machines...for other elections a new assessment will need to be made on data throughput and
-
-### EC2 instance configuration
-
-We use Ubuntu 16.04 LTS images for python3 projects.
-
-* Instance type: t2.medium
-* Storage: 10GB
-
-### Additional needed software
-
-* Python3 & virtualenv
-* Node6
-* Upstart - Due to our configuration files format
-* Nginx
-* uwsgi
-
-_Note: If you are at NPR we can use our AMI that already contains this configuration `python3 webserver`_
-
-
-### RDS instance configuration
-
-* Instance type: db.t2.medium
-* Database engine: PostgreSQL 9.6.3
-
-_Note: If you are at NPR we normally do not create the actual dabatase through the console to test on the staging and production environments our DB bootstrapping scripts._
-
-
-Deploy to S3
-------------
-
-```
-fab staging master deploy
-```
-
-Deploy to EC2
--------------
-
-You can deploy to EC2 for a variety of reasons. We cover two cases: Running a dynamic web application (`public_app.py`) and executing cron jobs (`crontab`).
-
-Servers capable of running the app can be setup using our [servers](https://github.com/nprapps/servers) project.
-
-For running a Web application:
-
-* In ``app_config.py`` set ``DEPLOY_TO_SERVERS`` to ``True``.
-* Also in ``app_config.py`` set ``DEPLOY_WEB_SERVICES`` to ``True``.
-* Run ``fab staging master servers.setup`` to configure the server.
-* Run ``fab staging master deploy`` to deploy the app.
-
-For running cron jobs:
-
-* In ``app_config.py`` set ``DEPLOY_TO_SERVERS`` to ``True``.
-* Also in ``app_config.py``, set ``INSTALL_CRONTAB`` to ``True``
-* Run ``fab staging master servers.setup`` to configure the server.
-* Run ``fab staging master deploy`` to deploy the app.
-
-You can configure your EC2 instance to both run Web services and execute cron jobs; just set both environment variables in the fabfile.
-
-Install cron jobs
------------------
-
-Cron jobs are defined in the file `crontab`. Each task should use the `cron.sh` shim to ensure the project's virtualenv is properly activated prior to execution. For example:
-
-```
-* * * * * ubuntu bash /home/ubuntu/apps/elections16_general/repository/cron.sh fab $DEPLOYMENT_TARGET cron_jobs.test
-```
-
-To install your crontab set `INSTALL_CRONTAB` to `True` in `app_config.py`. Cron jobs will be automatically installed each time you deploy to EC2.
-
-The cron jobs themselves should be defined in `fabfile/cron_jobs.py` whenever possible.
-
 Install web services
 ---------------------
 
@@ -714,20 +727,3 @@ fab staging master servers.fabcast:deploy
 ```
 
 If any of the commands you run themselves require executing on the server, the server will SSH into itself to run them.
-
-Analytics
----------
-
-The Google Analytics events tracked in this application are:
-
-|Category|Action|Label|Value|
-|--------|------|-----|-----|
-|elections17-alabama|tweet|`location`||
-|elections17-alabama|facebook|`location`||
-|elections17-alabama|email|`location`||
-|elections17-alabama|new-comment||
-|elections17-alabama|open-share-discuss||
-|elections17-alabama|close-share-discuss||
-|elections17-alabama|summary-copied||
-|elections17-alabama|featured-tweet-action|`action`|
-|elections17-alabama|featured-facebook-action|`action`|
