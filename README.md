@@ -508,6 +508,8 @@ For example a manual call for `Doug Jones` would look like this:
 COPY configuration
 ------------------
 
+_Note: This project was first created using NPR [app-template](https://github.com/nprapps/app-template) and even though we have stripped out the unused boilerplate that came along from it, we have left the COPY functionality because for subsequent elections we can foresee the use of the COPY worklow to add meta information for an election like the expected winner, or any other information given to us by the politics team that will add value to the pure results provided by AP_
+
 This app uses a Google Spreadsheet for a simple key/value store that provides an editing workflow.
 
 To access the Google doc, you'll need to create a Google API project via the [Google developer console](http://console.developers.google.com).
