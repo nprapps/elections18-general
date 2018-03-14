@@ -75,12 +75,6 @@ The project contains the following folders and important files:
 Bootstrap the project
 ---------------------
 
-Node.js is required for the static asset pipeline. If you don't already have it, get it like this:
-
-```
-brew install node
-```
-
 You will also need Python 3:
 
 ```
@@ -94,7 +88,6 @@ git clone git@github.com:nprapps/elections17-alabama.git
 cd elections17-alabama
 mkvirtualenv -p `which python3` elections17-alabama
 pip install -r requirements.txt
-npm install
 ```
 
 Note that deployment depends on `awscli`, which is broken on pip at the moment. Use your operating system's package manager to install it instead. (On Macs, use `brew install awscli`).
