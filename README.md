@@ -1,13 +1,8 @@
-Copyright 2015 NPR.  All rights reserved.  No part of these materials may be reproduced, modified, stored in a retrieval system, or retransmitted, in any form or by any means, electronic, mechanical or otherwise, without prior written permission from NPR.
-
-(Want to use this code? Send an email to nprapps@npr.org!)
-
-
-elections17-alabama
+elections18-general
 ===================
 
 * [What is this?](#what-is-this)
-* [Assumptions](#assumptions)
+* [Assumptions and Requirements](#assumptions-and-requirements)
 * [What's in here?](#whats-in-here)
 * [Bootstrap the project](#bootstrap-the-project)
 * [Data flow](#data-flow)
@@ -35,20 +30,26 @@ elections17-alabama
 What is this?
 -------------
 
-The backend for NPR's 2017 alabama special election coverage.
+The backend for NPR's 2018 miderm general-election coverage. It includes an Associated Press data ETL, database, admin panel, and produces JSON output for use on the front-end. It is an iteration upon the 2016 GE and the 2017 Alabama special-election work.
 
-Assumptions
+
+Assumptions and Requirements
 -----------
 
-The following things are assumed to be true in this documentation.
+### Platform and software
 
-* You are running OSX.
-* You are using **Python 3**.
-* You have [virtualenv](https://pypi.python.org/pypi/virtualenv) and [virtualenvwrapper](https://pypi.python.org/pypi/virtualenvwrapper) installed and working.
-* You have NPR's AWS credentials stored as environment variables locally.
-* You have an AP Elections results API key (see the [elex documentation](http://elex.readthedocs.io/en/stable/install.html#automatically-set-your-api-key) for more on this)
+* macOS
+* Python 3
+* Node.js 8
+* [`virtualenv`](https://pypi.python.org/pypi/virtualenv) and [`virtualenvwrapper`](https://pypi.python.org/pypi/virtualenvwrapper)
+* `awscli`
 
-For more details on the technology stack used with the app-template, see our [development environment blog post](http://blog.apps.npr.org/2013/06/06/how-to-setup-a-developers-environment.html).
+### Environment variables
+
+* NPR's AWS credentials, as `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` (`AWS_PROFILE` not supported)
+* [AP Elections Results API key](http://elex.readthedocs.io/en/stable/install.html#automatically-set-your-api-key), as `AP_API_KEY`
+
+Additional optional environment variables are described later.
 
 What's in here?
 ---------------
@@ -70,36 +71,17 @@ The project contains the following folders and important files:
 * ``app_config.py`` -- Global project configuration for scripts, deployment, etc.
 * ``render_utils.py`` -- Code supporting template rendering.
 * ``requirements.txt`` -- Python requirements.
-* ``static.py`` -- Static Flask views used in ``app.py``.
 
 Bootstrap the project
 ---------------------
 
-Node.js is required for the static asset pipeline. If you don't already have it, get it like this:
-
 ```
-brew install node
-```
-
-You will also need Python 3:
-
-```
-brew install python3
-```
-
-Then bootstrap the project:
-
-```
-git clone git@github.com:nprapps/elections17-alabama.git
-cd elections17-alabama
-mkvirtualenv -p `which python3` elections17-alabama
+git clone git@github.com:nprapps/elections18-general.git
+cd elections18-general
+mkvirtualenv --python="$(which python3)" elections18-general
 pip install -r requirements.txt
 npm install
 ```
-
-Note that deployment depends on `awscli`, which is broken on pip at the moment. Use your operating system's package manager to install it instead. (On Macs, use `brew install awscli`).
-
-**Problems installing requirements?** You may need to run the pip command as ``ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future pip install -r requirements.txt`` to work around an issue with OSX.
 
 Data flow
 ---------
@@ -112,11 +94,11 @@ When the project is deployed, a service is created named `fetch_and_publish_resu
 
 The `fetch_and_publish_results` service calls `run_on_server.sh` to initialize the Python and shell environment and then runs the `daemons.fetch_and_publish_results` Fabric task.  This task just runs the `daemons.main` Fabric task.
 
-### Fabric tasks use elex to fetch results into a Postgres database
+### Fabric tasks use `elex` to fetch results into a Postgres database
 
 The `daemons.main` Fabric task executes the `data.load_results` Fabric task. This task uses the [elex](https://github.com/newsdev/elex) CLI to download the results as CSV.  It then uses `psql` to load the CSV into a PostgreSQL database using a `COPY` query.
 
-_note: you can pass zeroes to the load_results task (`data.load_results:zeroes`) to override results with zeros; omits the winner indicator.Sets the vote, delegate, and reporting precinct counts to zero._
+_note: you can pass zeroes to the load_results task (`data.load_results:zeroes`) to override results with zeros; omits the winner indicator. Sets the vote, delegate, and reporting precinct counts to zero._
 
 ### Fabric tasks render results from the database to JSON
 
@@ -407,28 +389,29 @@ This project did not have strong requirements in terms of performance nor data l
 
 ### EC2 instance configuration
 
-We use Ubuntu 16.04 LTS images for python3 projects.
+We use Ubuntu 16.04 LTS images for Python 3 projects.
 
-* Instance type: t2.medium
+* Instance type: `t2.medium`
 * Storage: 10GB
 
 ### Additional needed software
 
-* Python3 & virtualenv
-* Node.js 6
-* Upstart - Due to our configuration files format
+* Python 3
+* `virtualenv`
+* Node.js 8
+* Upstart, to use our configuration files
 * Nginx
-* uwsgi
+* `uwsgi`
 
 _Note: NPR users can use our AMI that already contains this configuration, `python3 webserver`_
 
 
 ### RDS instance configuration
 
-* Instance type: db.t2.medium
+* Instance type: `db.t2.medium`
 * Database engine: PostgreSQL 9.6.3
 
-_Note: At NPR we normally do not create the actual dabatase through the AWS console in order to test our database bootstrapping scripts in the staging and production environments._
+_Note: At NPR we normally do not create the actual dabatase through the AWS Console, in order to test our database bootstrapping scripts in the staging and production environments._
 
 Deployment
 ----------
@@ -462,7 +445,6 @@ Run the project
 A flask app is used to run the project locally. It will automatically recompile templates and assets on demand.
 
 ```
-workon elections17-alabama
 fab app
 ```
 
@@ -489,7 +471,7 @@ There is a web-based admin interface that can be used to call winners in races. 
 
 In the admin we can decide whether or not we accept AP calls for winners in a given race.
 
-For example if you are running the local webserver you can check the admin for senate races by visiting `http://localhost:8000/elections17-alabama/calls/senate/`
+For example if you are running the local webserver you can check the admin for senate races by visiting `http://localhost:8000/elections18-general/calls/senate/`
 
 ![screenshot Admin][screenshot]
 
@@ -682,7 +664,6 @@ Compile static assets
 Compile LESS to CSS, compile javascript templates to Javascript and minify all assets:
 
 ```
-workon elections17-alabama
 fab render
 ```
 
@@ -717,7 +698,7 @@ You can also deploy only configuration files by running (normally this is invoke
 fab servers.deploy_confs
 ```
 
-Run a  remote fab command
+Run a remote fab command
 -------------------------
 
 Sometimes it makes sense to run a fabric command on the server, for instance, when you need to render using a production database. You can do this with the `fabcast` fabric command. For example:
