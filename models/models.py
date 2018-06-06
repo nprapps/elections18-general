@@ -8,7 +8,6 @@ logger = logging.getLogger('peewee')
 logger.setLevel(logging.WARNING)
 logger.addHandler(logging.StreamHandler())
 
-# app_config.configure_targets('test')
 
 db = PostgresqlDatabase(
     app_config.database['PGDATABASE'],
@@ -70,21 +69,51 @@ class Result(BaseModel):
     winner = BooleanField(null=True)
 
     def is_npr_winner(self):
+        if self.level == 'district':
+            if (self.electwon > 0 and self.call[0].accept_ap) or self.call[0].override_winner:
+                return True
+            else:
+                return False
+
         if (self.winner and self.call[0].accept_ap) or self.call[0].override_winner:
             return True
         else:
             return False
 
-    def nprformat_precinctsreportingpct(self):
-        if self.precinctsreporting > 0 and self.precinctsreportingpct <= 0.005:
-            return '<1%'
-        elif self.precinctsreporting < self.precinctstotal and self.precinctsreportingpct > 0.995:
-            return '>99%'
+    def is_pickup(self):
+        if self.is_npr_winner() and self.party != self.meta[0].current_party:
+            return True
         else:
-            return '{0:.0%}'.format(self.precinctsreportingpct)
+            return False
+
+    def is_expected(self):
+        if self.is_npr_winner() and self.party == self.meta[0].expected:
+            return True
+        else:
+            return False
+
+    def is_not_expected(self):
+        if self.is_npr_winner():
+            if self.meta[0].expected == 'Dem' and self.party != 'Dem':
+                return True
+            if self.meta[0].expected == 'GOP' and self.party != 'GOP':
+                return True
+            else:
+                return False
+        else:
+            return False
 
 
 class Call(BaseModel):
     call_id = ForeignKeyField(Result, related_name='call')
     accept_ap = BooleanField(default=True)
     override_winner = BooleanField(default=False)
+
+
+class RaceMeta(BaseModel):
+    result_id = ForeignKeyField(Result, related_name='meta')
+    poll_closing = CharField(null=True)
+    full_poll_closing = CharField(null=True)
+    first_results = CharField(null=True)
+    current_party = CharField(null=True)
+    expected = CharField(null=True)

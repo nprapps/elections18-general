@@ -108,5 +108,6 @@ class ResultsRenderingTestCase(unittest.TestCase):
 
         self.assertEqual(len(serialized_results.keys()), 67)
 
+
 if __name__ == '__main__':
     unittest.main()

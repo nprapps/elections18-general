@@ -36,14 +36,14 @@ def main(run_once=False):
 
         if app_config.LOAD_RESULTS_INTERVAL and (now - results_start) > app_config.LOAD_RESULTS_INTERVAL:
             results_start = now
-            logger.info('loading alabama results')
+            logger.info('loading results')
             execute('data.load_results')
             logger.info("results loaded: %s seconds" % (time() - results_start))
-            execute('publish_results')
+            execute('render.render_all')
             logger.info("results rendered and published: %s seconds" % (time() - results_start))
 
         if run_once:
             logger.info('run once specified, exiting')
             sys.exit(0)
 
-        sleep(1)
+        sleep(0.1)

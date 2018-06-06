@@ -20,20 +20,20 @@ NAMES
 """
 # Project name to be used in urls
 # Use dashes, not underscores!
-PROJECT_SLUG = 'elections17-alabama'
+PROJECT_SLUG = 'elections18'
 
 # Project name to be used in file paths and envvars
-PROJECT_FILENAME = 'elections17_alabama'
+PROJECT_FILENAME = 'elections18_general'
 
 # The name of the repository containing the source
-REPOSITORY_NAME = 'elections17-alabama'
+REPOSITORY_NAME = 'elections18-general'
 GITHUB_USERNAME = 'nprapps'
 REPOSITORY_URL = 'git@github.com:%s/%s.git' % (GITHUB_USERNAME, REPOSITORY_NAME)
-REPOSITORY_ALT_URL = None # 'git@bitbucket.org:nprapps/%s.git' % REPOSITORY_NAME'
+REPOSITORY_ALT_URL = None  # 'git@bitbucket.org:nprapps/%s.git' % REPOSITORY_NAME'
 
 # Project name used for assets rig
 # Should stay the same, even if PROJECT_SLUG changes
-ASSETS_SLUG = 'elections17-alabama'
+ASSETS_SLUG = 'elections18-general'
 
 """
 DEPLOYMENT
@@ -93,11 +93,11 @@ DEBUG = True
 """
 COPY EDITING
 """
-COPY_GOOGLE_DOC_KEY = '1eIDJz5Ay07XoX8zkSk1fINH-ovS2yaEa99kP67bZMz0'
+COPY_GOOGLE_DOC_KEY = '1pja8aNw24ZGZTrfO8TSQCfN76gQrj6OhEcs07uz0_C0'
 COPY_PATH = 'data/copy.xlsx'
 
-CALENDAR_GOOGLE_DOC_KEY = '1j5fxdiUyruSdjgNDU14lAIAw-r51oDCMdhaAnKcCWBU'
-CALENDAR_PATH = 'data/meta.xlsx'
+CALENDAR_GOOGLE_DOC_KEY = '1pfTPmeWGTQlw_7efXcnMoblarzyaz_zjDzqBfLFnLYg'
+CALENDAR_PATH = 'data/calendar.xlsx'
 
 """
 SHARING
@@ -110,7 +110,7 @@ SERVICES
 NPR_GOOGLE_ANALYTICS = {
     'ACCOUNT_ID': 'UA-5828686-4',
     'DOMAIN': PRODUCTION_S3_BUCKET,
-    'TOPICS': '' # e.g. '[1014,3,1003,1002,1001]'
+    'TOPICS': ''  # e.g. '[1014,3,1003,1002,1001]'
 }
 
 VIZ_GOOGLE_ANALYTICS = {
@@ -145,31 +145,18 @@ LOG_FORMAT = '%(levelname)s:%(name)s:%(asctime)s: %(message)s'
 """
 elex config
 """
-NEXT_ELECTION_DATE = '2017-12-12'
-# TODO: Remove test flag
-ELEX_FLAGS = '--national-only'
-ELEX_FTP_FLAGS = '--states AL'
+NEXT_ELECTION_DATE = '2016-11-08'
+ELEX_FLAGS = '--national-only --results-level state'
+ELEX_INIT_FLAGS = '--national-only --results-level ru'
+ELEX_FTP_FLAGS = ''
 
 ELEX_RESET_FLAGS = '--national-only --set-zero-counts'
 
 LOAD_RESULTS_INTERVAL = 10
 DATA_OUTPUT_FOLDER = '.rendered'
 
-"""
-Results config
-"""
-RESULTS = (
-    {
-        # Output filename
-        'filename': 'alabama-results.json',
-        # A function that returns a set of Peewee models that will be baked
-        'query': 'fabfile.query.select_senate_results',
-        # A function that takes the Peewee models and returns a JSON serializeable
-        # dictionary or list with the results in the desired shape, with the desired
-        # fields
-        'transform': 'fabfile.transform.serialize_results'
-    },
-)
+SELECTED_HOUSE_RACES = [15038, 47019, 10031, 10019, 10041, 11586, 15999, 20645, 30015, 31211, 39015, 3004, 6618, 17009, 23805, 23811, 24028, 24010, 24013, 28385, 36581, 36604, 36599, 36602, 45893, 50068, 17073, 17071, 30155, 30992, 49548, 5715, 8514, 5741, 5697, 39023, 5711, 2015, 3006, 5714, 6615, 10025, 16001, 15038, 30155, 30992, 36603, 36583, 39013, 47007, 47009]
+
 
 """
 Utilities
@@ -180,9 +167,9 @@ def get_secrets():
     """
     secrets_dict = {}
 
-    for k,v in os.environ.items():
-        if k.startswith(PROJECT_FILENAME):
-            k = k[len(PROJECT_FILENAME) + 1:]
+    for k, v in os.environ.items():
+        if k.startswith(PROJECT_SLUG):
+            k = k[len(PROJECT_SLUG) + 1:]
             secrets_dict[k] = v
 
     return secrets_dict
@@ -205,13 +192,10 @@ def configure_targets(deployment_target):
     global ASSETS_MAX_AGE
     global database
     global NEXT_ELECTION_DATE
-    global FAST_ELEX_FLAGS
-    global SLOW_ELEX_FLAGS
+    global ELEX_FLAGS
     global ELEX_INIT_FLAGS
-    global ELEX_DISTRICTS_FLAGS
     global LOAD_RESULTS_INTERVAL
     global ELEX_OUTPUT_FOLDER
-
 
     secrets = get_secrets()
 
@@ -219,9 +203,9 @@ def configure_targets(deployment_target):
     Database
     """
     database = {
-        'PGDATABASE': PROJECT_FILENAME,
-        'PGUSER': secrets.get('POSTGRES_USER', PROJECT_FILENAME),
-        'PGPASSWORD': secrets.get('POSTGRES_PASSWORD', PROJECT_FILENAME),
+        'PGDATABASE': PROJECT_SLUG,
+        'PGUSER': secrets.get('POSTGRES_USER', PROJECT_SLUG),
+        'PGPASSWORD': secrets.get('POSTGRES_PASSWORD', PROJECT_SLUG),
         'PGHOST': secrets.get('POSTGRES_HOST', 'localhost'),
         'PGPORT': secrets.get('POSTGRES_PORT', '5432')
     }
@@ -260,8 +244,8 @@ def configure_targets(deployment_target):
         LOG_LEVEL = logging.DEBUG
         DEBUG = True
         ASSETS_MAX_AGE = 20
-        NEXT_ELECTION_DATE = '2017-12-12'
-        ELEX_FLAGS = '-d tests/data/test.json -o csv'
+        ELEX_FLAGS = '--national-only --results-level state'
+        ELEX_INIT_FLAGS = '-d tests/data/test.json -o csv'
         LOAD_RESULTS_INTERVAL = 10
         ELEX_OUTPUT_FOLDER = '.testdata'
         database['PGDATABASE'] = '{0}_test'.format(database['PGDATABASE'])
@@ -280,6 +264,7 @@ def configure_targets(deployment_target):
         ELEX_OUTPUT_FOLDER = '.data'
 
     DEPLOYMENT_TARGET = deployment_target
+
 
 """
 Run automated configuration

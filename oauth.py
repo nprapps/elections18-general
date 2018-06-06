@@ -11,6 +11,7 @@ SPREADSHEET_URL_TEMPLATE = 'https://docs.google.com/feeds/download/spreadsheets/
 
 oauth = Blueprint('_oauth', __name__)
 
+
 @oauth.route('/oauth/')
 def oauth_alert():
     """
@@ -28,6 +29,7 @@ def oauth_alert():
             context['email'] = resp.data['email']
 
     return render_template('oauth/oauth.html', **context)
+
 
 @oauth.route('/authenticate/', methods=['GET', 'POST'])
 def authenticate():
@@ -54,6 +56,7 @@ def authenticate():
 
     return response
 
+
 def oauth_required(f):
     """
     Decorator to ensure oauth workflow has happened.
@@ -69,6 +72,7 @@ def oauth_required(f):
                 get_document(app_config.COPY_GOOGLE_DOC_KEY, app_config.COPY_PATH)
             return f(*args, **kwargs)
     return decorated_function
+
 
 def get_credentials():
     """
@@ -90,6 +94,7 @@ def get_credentials():
 
     return credentials
 
+
 def save_credentials(credentials):
     """
     Take Authomatic credentials object and save to disk.
@@ -97,6 +102,7 @@ def save_credentials(credentials):
     file_path = os.path.expanduser(app_config.GOOGLE_OAUTH_CREDENTIALS_PATH)
     with open(file_path, 'w') as f:
         f.write(credentials.serialize())
+
 
 def get_document(key, file_path):
     """
@@ -114,6 +120,7 @@ def get_document(key, file_path):
 
     with open(file_path, 'wb') as writefile:
         writefile.write(response.content)
+
 
 def _has_api_credentials():
     """
