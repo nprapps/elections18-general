@@ -146,11 +146,9 @@ LOG_FORMAT = '%(levelname)s:%(name)s:%(asctime)s: %(message)s'
 elex config
 """
 NEXT_ELECTION_DATE = '2016-11-08'
-ELEX_FLAGS = '--national-only --results-level state'
-ELEX_INIT_FLAGS = '--national-only --results-level ru'
+ELEX_FLAGS = '--national-only --results-level ru'
+ELEX_INIT_FLAGS = '--national-only --results-level ru --set-zero-counts'
 ELEX_FTP_FLAGS = ''
-
-ELEX_RESET_FLAGS = '--national-only --set-zero-counts'
 
 LOAD_RESULTS_INTERVAL = 10
 DATA_OUTPUT_FOLDER = '.rendered'
