@@ -105,6 +105,8 @@ def load_results(initialize=False):
         with settings(warn_only=True), hide('output', 'running'):
             cmd_output = local(cmd, capture=True)
 
+        # `elex` exit code `64` indicates that no new data was found,
+        # and that the previous set of results will be re-used instead
         if cmd_output.succeeded or cmd_output.return_code == 64:
             delete_results()
             with hide('output', 'running'):

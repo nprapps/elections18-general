@@ -3,6 +3,7 @@ import sys
 
 import fields
 
+
 def output_csv(output):
     """
     Handles CSV output.

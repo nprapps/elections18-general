@@ -39,7 +39,7 @@ def main(run_once=False):
             logger.info('loading results')
             execute('data.load_results')
             logger.info("results loaded: %s seconds" % (time() - results_start))
-            execute('render.render_all')
+            execute('publish_results')
             logger.info("results rendered and published: %s seconds" % (time() - results_start))
 
         if run_once:

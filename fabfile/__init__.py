@@ -46,6 +46,7 @@ def production():
     app_config.configure_targets(env.settings)
     env.hosts = app_config.SERVERS
 
+
 @task
 def staging():
     """
@@ -63,6 +64,7 @@ def test():
     """
     app_config.configure_targets('test')
 
+
 """
 Branches
 
@@ -75,6 +77,7 @@ def stable():
     """
     env.branch = 'stable'
 
+
 @task
 def master():
     """
@@ -82,12 +85,14 @@ def master():
     """
     env.branch = 'master'
 
+
 @task
 def branch(branch_name):
     """
     Work on any specified branch.
     """
     env.branch = branch_name
+
 
 """
 Running the app
@@ -102,12 +107,14 @@ def app(port='8000'):
     else:
         local('gunicorn -b 0.0.0.0:%s --timeout 3600 --reload --log-file=- app:wsgi_app' % port)
 
+
 @task
 def tests():
     """
     Run Python unit tests.
     """
     local('nosetests')
+
 
 """
 Deployment
@@ -116,11 +123,10 @@ Changes to deployment requires a full-stack test. Deployment
 has two primary functions: Pushing flat files to S3 and deploying
 code to a remote server if required.
 """
-
 @task
 def publish_results():
-    render.render()
-    # Ignore deployment when testing locally
+    render.render_all()
+    # Ignore deployment when testing locally
     if env.get('settings'):
         sync_s3()
 
@@ -137,7 +143,6 @@ Changes to destruction require setup/deploy to a test host in order to test.
 Destruction should remove all files related to the project from both a remote
 host and S3.
 """
-
 @task
 def shiva_the_destroyer():
     """

@@ -69,12 +69,6 @@ class Result(BaseModel):
     winner = BooleanField(null=True)
 
     def is_npr_winner(self):
-        if self.level == 'district':
-            if (self.electwon > 0 and self.call[0].accept_ap) or self.call[0].override_winner:
-                return True
-            else:
-                return False
-
         if (self.winner and self.call[0].accept_ap) or self.call[0].override_winner:
             return True
         else:

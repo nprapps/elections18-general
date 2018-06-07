@@ -157,6 +157,7 @@ class Load(object):
         self.set_states(states_to_parse=kwargs.get('states_to_parse', None))
         self.generate_xml_paths()
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--states', action='store', help="A comma-separated list of state abbreviations to parse.")
@@ -170,6 +171,7 @@ def main():
     l.unzip_xml_zips()
     l.parse_xml()
     l.clean_files()
+
 
 if __name__ == '__main__':
     main()

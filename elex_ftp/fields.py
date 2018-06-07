@@ -38,7 +38,7 @@ FIELDS = {
     'uncontested': None,
     'votecount': None,
     'votepct': None,
-    'winner':None
+    'winner': None
 }
 
 FIELDNAMES = FIELDS.keys()
