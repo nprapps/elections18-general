@@ -1,0 +1,10 @@
+version: "3"
+services:
+  fakeserver:
+    build:
+      context: .
+      dockerfile: Dockerfile-fakeserver
+      args:
+        - AP_API_KEY
+    ports:
+      - "8002:8002"

@@ -87,7 +87,7 @@ def load_results(initialize=False):
     Load AP results. Defaults to next election, or specify a date as a parameter.
     """
     if initialize is True:
-        flags = app_config.ELEX_RESET_FLAGS
+        flags = app_config.ELEX_INIT_FLAGS
     else:
         flags = app_config.ELEX_FLAGS
 
