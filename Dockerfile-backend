@@ -1,0 +1,15 @@
+FROM python:3.6
+
+ARG elections18_POSTGRES_PORT
+ARG AP_API_BASE_URL
+
+RUN apt-get update && apt-get install -y \
+    postgresql-client
+
+ADD ./requirements.txt /opt/elections18-general/requirements.txt
+WORKDIR /opt/elections18-general
+RUN pip install -r requirements.txt
+
+# This entrypoint will be overridden by the database-initialization service
+# The first AP-Fake'd file will work for that, since it's all zeroes
+ENTRYPOINT fab daemons.main

@@ -207,6 +207,7 @@ def configure_targets(deployment_target):
         'PGHOST': secrets.get('POSTGRES_HOST', 'localhost'),
         'PGPORT': secrets.get('POSTGRES_PORT', '5432')
     }
+    database['PGURI'] = 'postgres://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}'.format(**database)
 
     if deployment_target == 'production':
         S3_BUCKET = PRODUCTION_S3_BUCKET

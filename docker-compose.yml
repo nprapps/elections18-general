@@ -1,10 +1,49 @@
 version: "3"
+
 services:
-  fakeserver:
+  fakeapserver:
     build:
       context: .
-      dockerfile: Dockerfile-fakeserver
+      dockerfile: Dockerfile-fakeapserver
       args:
         - AP_API_KEY
     ports:
+      # The admin pane will be exposed on the host machine at
+      # http://localhost:8002/elections/2016/ap-deja-vu/
       - "8002:8002"
+
+  database:
+    image: "postgres:10"
+    environment:
+      - POSTGRES_USER=elections18
+    ports:
+      - "5433:5432"
+
+  bootstrap_db:
+    depends_on:
+      - database
+      - fakeapserver
+    build:
+      context: .
+      dockerfile: Dockerfile-backend
+    entrypoint: "fab data.bootstrap_db"
+    volumes:
+      - .:/opt/elections18-general
+    environment:
+      - elections18_POSTGRES_HOST=database
+      - AP_API_BASE_URL="http://fakeapserver:8002/elections/2016/ap-deja-vu"
+      - AP_API_KEY
+
+  backend:
+    depends_on:
+      - database
+      - fakeapserver
+    build:
+      context: .
+      dockerfile: Dockerfile-backend
+    volumes:
+      - .:/opt/elections18-general
+    environment:
+      - elections18_POSTGRES_HOST=database
+      - AP_API_BASE_URL="http://fakeapserver:8002/elections/2016/ap-deja-vu"
+      - AP_API_KEY

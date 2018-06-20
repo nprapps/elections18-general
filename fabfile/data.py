@@ -46,14 +46,8 @@ def create_db():
             execute('servers.stop_service', 'fetch_and_publish_results')
 
         with shell_env(**app_config.database):
-            local('dropdb --if-exists %s' % app_config.database['PGDATABASE'])
-
-        if not env.get('settings'):
-            local('psql -c "DROP USER IF EXISTS %s;"' % app_config.database['PGUSER'])
-            local('psql -c "CREATE USER %s WITH SUPERUSER PASSWORD \'%s\';"' % (app_config.database['PGUSER'], app_config.database['PGPASSWORD']))
-
-        with shell_env(**app_config.database):
-            local('createdb %s' % app_config.database['PGDATABASE'])
+            local('dropdb --host={PGHOST} --port={PGPORT} --username={PGUSER} --if-exists {PGDATABASE}'.format(**app_config.database))
+            local('createdb --host={PGHOST} --port={PGPORT} --username={PGUSER} {PGDATABASE}'.format(**app_config.database))
 
         if env.get('settings'):
             execute('servers.start_service', 'uwsgi')
@@ -76,7 +70,7 @@ def delete_results():
 
     with shell_env(**app_config.database), hide('output', 'running'):
         local('psql {0} -c "set session_replication_role = replica; DELETE FROM result {1}; set session_replication_role = default;"'.format(
-            app_config.database['PGDATABASE'],
+            app_config.database['PGURI'],
             where_clause
         ))
 
@@ -96,8 +90,8 @@ def load_results(initialize=False):
         local('mkdir -p {0}'.format(app_config.ELEX_OUTPUT_FOLDER))
 
     cmd = 'elex results {0} {1} > {2}/results.csv'.format(
-        election_date,
         flags,
+        election_date,
         app_config.ELEX_OUTPUT_FOLDER
     )
 
@@ -112,7 +106,7 @@ def load_results(initialize=False):
             with hide('output', 'running'):
                 local('cat {0}/results.csv | psql {1} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(
                     app_config.ELEX_OUTPUT_FOLDER,
-                    app_config.database['PGDATABASE']
+                    app_config.database['PGURI']
                 ))
 
         else:

@@ -1,18 +1,16 @@
-FROM postgres:10
+FROM python:3.6
 
 ARG AP_API_KEY
 
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
     git \
     curl \
     redis-server
 
 WORKDIR /opt
 RUN git clone https://github.com/newsdev/ap-deja-vu.git
-RUN pip3 install apfake && \
-    pip3 install -r ap-deja-vu/requirements.txt
+RUN pip install apfake && \
+    pip install -r ap-deja-vu/requirements.txt
 
 # Get the real 2016 data and create a progression of fake data from that
 RUN curl "https://api.ap.org/v2/elections/2016-11-08?level=ru&format=json&apikey=${AP_API_KEY}" \
@@ -28,9 +26,4 @@ RUN mkdir /tmp/2016-11-08/national && \
 # http://localhost:8002/elections/2016/ap-deja-vu/
 WORKDIR /opt/ap-deja-vu/ap_deja_vu
 ENTRYPOINT redis-server --daemonize yes && \
-    python3 app.py
-
-# With this setup, you can set this environment variable on your host machine,
-# which'll let you set up your database (`fab data.bootstrap_db`) and
-# run the daemon (`fab daemons.main`):
-# AP_API_BASE_URL="http://localhost:8002/elections/2016/ap-deja-vu"
+    python app.py
