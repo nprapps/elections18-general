@@ -25,25 +25,42 @@ services:
       - fakeapserver
     build:
       context: .
-      dockerfile: Dockerfile-backend
+      dockerfile: Dockerfile
     entrypoint: "fab data.bootstrap_db"
     volumes:
-      - .:/opt/elections18-general
+      - .:/opt/elections18
     environment:
       - elections18_POSTGRES_HOST=database
       - AP_API_BASE_URL=http://fakeapserver:8002/elections/2016/ap-deja-vu
       - AP_API_KEY
 
-  backend:
+  daemon:
     depends_on:
       - database
-      - fakeapserver
     build:
       context: .
-      dockerfile: Dockerfile-backend
+      dockerfile: Dockerfile
+    entrypoint: "fab daemons.main"
     volumes:
-      - .:/opt/elections18-general
+      - .:/opt/elections18
     environment:
       - elections18_POSTGRES_HOST=database
       - AP_API_BASE_URL=http://fakeapserver:8002/elections/2016/ap-deja-vu
       - AP_API_KEY
+
+  app:
+    depends_on:
+      - database
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint: "fab app:8001"
+    ports:
+      # The admin pane will be exposed on the host machine at
+      # http://localhost:8001/elections18/calls/senate/
+      # (or altered for other office types)
+      - "8001:8001"
+    volumes:
+      - .:/opt/elections18
+    environment:
+      - elections18_POSTGRES_HOST=database
