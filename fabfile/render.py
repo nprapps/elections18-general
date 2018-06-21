@@ -450,8 +450,9 @@ def _write_json_file(serialized_results, filename):
 
 @task
 def render_all():
-    shutil.rmtree('{0}'.format(app_config.DATA_OUTPUT_FOLDER))
-    os.makedirs('{0}'.format(app_config.DATA_OUTPUT_FOLDER))
+    if os.path.isdir(app_config.DATA_OUTPUT_FOLDER):
+        shutil.rmtree(app_config.DATA_OUTPUT_FOLDER)
+    os.makedirs(app_config.DATA_OUTPUT_FOLDER)
     render_top_level_numbers()
     render_senate_results()
     render_governor_results()
