@@ -31,7 +31,7 @@ services:
       - .:/opt/elections18-general
     environment:
       - elections18_POSTGRES_HOST=database
-      - AP_API_BASE_URL="http://fakeapserver:8002/elections/2016/ap-deja-vu"
+      - AP_API_BASE_URL=http://fakeapserver:8002/elections/2016/ap-deja-vu
       - AP_API_KEY
 
   backend:
@@ -45,5 +45,5 @@ services:
       - .:/opt/elections18-general
     environment:
       - elections18_POSTGRES_HOST=database
-      - AP_API_BASE_URL="http://fakeapserver:8002/elections/2016/ap-deja-vu"
+      - AP_API_BASE_URL=http://fakeapserver:8002/elections/2016/ap-deja-vu
       - AP_API_KEY
