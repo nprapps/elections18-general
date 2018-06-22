@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # _*_ coding:utf-8 _*_
 
+import logging
+import os
+
 from fabric.api import local, require, settings, task
 from fabric.state import env
 from termcolor import colored
@@ -18,9 +21,9 @@ from . import utils
 if app_config.DEPLOY_TO_SERVERS:
     from . import servers
 
-# Bootstrap can only be run once, then it's disabled
-if app_config.PROJECT_SLUG == '$NEW_PROJECT_SLUG':
-    from . import bootstrap
+logging.basicConfig(format=app_config.LOG_FORMAT)
+logger = logging.getLogger(__name__)
+logger.setLevel(app_config.LOG_LEVEL)
 
 """
 Base configuration
@@ -126,9 +129,12 @@ code to a remote server if required.
 @task
 def publish_results():
     render.render_all()
-    # Ignore deployment when testing locally
     if env.get('settings'):
         sync_s3()
+    elif os.path.isdir(app_config.GRAPHICS_DATA_OUTPUT_FOLDER):
+        data.copy_data_for_graphics()
+    else:
+        logger.warning('No destination to publish rendered data')
 
 
 @task

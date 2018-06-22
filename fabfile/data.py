@@ -193,14 +193,10 @@ def create_race_meta():
 
 @task
 def copy_data_for_graphics():
-    execute('render.render_all')
-
-    if app_config.NEXT_ELECTION_DATE[:4] == '2012':
-        graphics_folder = '../elections16graphics/www/2012/data/'
-    else:
-        graphics_folder = '../elections16graphics/www/data/'
-
-    local('cp -r {0}/* {1}'.format(app_config.DATA_OUTPUT_FOLDER, graphics_folder))
+    local('cp -r {0}/*.json {1}'.format(
+        app_config.DATA_OUTPUT_FOLDER,
+        app_config.GRAPHICS_DATA_OUTPUT_FOLDER
+    ))
 
 
 @task

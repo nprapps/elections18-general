@@ -35,6 +35,10 @@ REPOSITORY_ALT_URL = None  # 'git@bitbucket.org:nprapps/%s.git' % REPOSITORY_NAM
 # Should stay the same, even if PROJECT_SLUG changes
 ASSETS_SLUG = 'elections18-general'
 
+# Name of graphics repository, for sharing data with that repo locally
+GRAPHICS_REPOSITORY_NAME = 'elections18-graphics'
+GRAPHICS_DATA_OUTPUT_FOLDER = '../{}/www/data/'.format(GRAPHICS_REPOSITORY_NAME)
+
 """
 DEPLOYMENT
 """
