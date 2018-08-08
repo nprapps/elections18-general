@@ -8,6 +8,7 @@ import csv
 import json
 import logging
 import math
+import os
 from time import sleep
 
 import copytext
@@ -193,6 +194,8 @@ def create_race_meta():
 
 @task
 def copy_data_for_graphics():
+    assert os.path.isdir(app_config.GRAPHICS_DATA_OUTPUT_FOLDER), \
+            "Make sure that the local data output directory exists: `{}`".format(app_config.GRAPHICS_DATA_OUTPUT_FOLDER)
     local('cp -r {0}/*.json {1}'.format(
         app_config.DATA_OUTPUT_FOLDER,
         app_config.GRAPHICS_DATA_OUTPUT_FOLDER
