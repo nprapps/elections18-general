@@ -122,13 +122,15 @@
                     </tr>
                     {% endfor %}
                     </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="5">
-                                {{ results[5:]|length }} more candidates not shown
-                            </td>
-                        </tr>
-                    </tfoot>
+                    {% if results|length > 5 %}
+                        <tfoot>
+                            <tr>
+                                <td colspan="5">
+                                    {{ results[5:]|length }} more candidates not shown
+                                </td>
+                            </tr>
+                        </tfoot>
+                    {% endif %}
                 </table>
                 {% endfor %}
             </div>
