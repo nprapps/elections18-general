@@ -125,7 +125,9 @@ def _select_senate_results():
 def _select_ballot_measure_results():
     results = models.Result.select().where(
         models.Result.level == 'state',
-        models.Result.is_ballot_measure == True
+        # `peewee` requires using `==` instead of `is` for boolean conditions
+        # https://github.com/coleifer/peewee/issues/612
+        models.Result.is_ballot_measure == True  # NOQA
     )
 
     return results
@@ -267,7 +269,9 @@ def _render_state(statepostal):
         )
         ballot_measures = models.Result.select().where(
             models.Result.level == 'state',
-            models.Result.is_ballot_measure is True,
+            # `peewee` requires using `==` instead of `is` for boolean conditions
+            # https://github.com/coleifer/peewee/issues/612
+            models.Result.is_ballot_measure == True,  # NOQA
             models.Result.statepostal == statepostal
         )
 
