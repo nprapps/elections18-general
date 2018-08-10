@@ -396,6 +396,8 @@ def _calculate_bop(result, bop):
 
 
 def collate_other_candidates(serialized_results):
+    # Create an "Other" candidate, to simplify front-end visuals,
+    # and minimize filesize of JSON dumps
     for key, val in serialized_results['results'].items():
         if isinstance(val, list):
             other_votecount = 0
@@ -411,13 +413,16 @@ def collate_other_candidates(serialized_results):
                 else:
                     filtered.append(result)
 
-            filtered.append({
-                'first': '',
-                'last': 'Other',
-                'votecount': other_votecount,
-                'votepct': other_votepct,
-                'npr_winner': other_winner
-            })
+            # Don't create an "Other" if there are _only_ main-party
+            # candidates in the race
+            if len(val) > len(filtered):
+                filtered.append({
+                    'first': '',
+                    'last': 'Other',
+                    'votecount': other_votecount,
+                    'votepct': other_votepct,
+                    'npr_winner': other_winner
+                })
 
             serialized_results['results'][key] = filtered
 
