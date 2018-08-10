@@ -150,11 +150,18 @@ LOG_FORMAT = '%(levelname)s:%(name)s:%(asctime)s: %(message)s'
 elex config
 """
 NEXT_ELECTION_DATE = '2016-11-08'
-ELEX_FLAGS = '--national-only --results-level ru'
-ELEX_INIT_FLAGS = '--national-only --results-level ru --set-zero-counts'
+# We need to make a single call in order to be compatible with our
+# testing server. Ideally we'd have two calls, with House and Initiative
+# data being requested at the race-wide level, to minimize data-over-the-wire.
+ELEX_FLAG_SETS = [
+    '--results-level ru --officeids H,S,G,I'
+]
+ELEX_INIT_FLAG_SETS = [
+    '--results-level state --officeids H,S,G,I --set-zero-counts'
+]
 ELEX_FTP_FLAGS = ''
 
-LOAD_RESULTS_INTERVAL = 10
+LOAD_RESULTS_INTERVAL = 12
 DATA_OUTPUT_FOLDER = '.rendered'
 
 SELECTED_HOUSE_RACES = [15038, 47019, 10031, 10019, 10041, 11586, 15999, 20645, 30015, 31211, 39015, 3004, 6618, 17009, 23805, 23811, 24028, 24010, 24013, 28385, 36581, 36604, 36599, 36602, 45893, 50068, 17073, 17071, 30155, 30992, 49548, 5715, 8514, 5741, 5697, 39023, 5711, 2015, 3006, 5714, 6615, 10025, 16001, 15038, 30155, 30992, 36603, 36583, 39013, 47007, 47009]

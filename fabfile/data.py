@@ -6,6 +6,7 @@ Commands that update or process the application data.
 import app_config
 import csv
 import json
+import hashlib
 import logging
 import math
 import os
@@ -70,10 +71,17 @@ def delete_results():
     where_clause = ''
 
     with shell_env(**app_config.database), hide('output', 'running'):
+        # Bypass the foreign-key constraint on deletion by using `session_replication_role`.
+        # This is an opaque hack, and should be replaced with clearer,
+        # more SQL-native database logic in the future
         local('psql {0} -c "set session_replication_role = replica; DELETE FROM result {1}; set session_replication_role = default;"'.format(
             app_config.database['PGURI'],
             where_clause
         ))
+
+
+def make_flag_set_uid(flag_set):
+    return hashlib.md5(flag_set.encode('utf-8')).hexdigest()
 
 
 @task
@@ -82,39 +90,57 @@ def load_results(initialize=False):
     Load AP results. Defaults to next election, or specify a date as a parameter.
     """
     if initialize is True:
-        flags = app_config.ELEX_INIT_FLAGS
+        flag_sets = app_config.ELEX_INIT_FLAG_SETS
     else:
-        flags = app_config.ELEX_FLAGS
+        flag_sets = app_config.ELEX_FLAG_SETS
 
-    election_date = app_config.NEXT_ELECTION_DATE
-    with hide('output', 'running'):
-        local('mkdir -p {0}'.format(app_config.ELEX_OUTPUT_FOLDER))
+    if not os.path.isdir(app_config.ELEX_OUTPUT_FOLDER):
+        os.makedirs(app_config.ELEX_OUTPUT_FOLDER)
 
-    cmd = 'elex results {0} {1} > {2}/results.csv'.format(
-        flags,
-        election_date,
-        app_config.ELEX_OUTPUT_FOLDER
-    )
+    RESULTS_FILENAME_PREFIX = 'results-'
+
+    # Need separate filenames for the different possible elex flag sets,
+    # so the simplest way is to use a hash of those flag-strings
+    cmds = [
+        'elex results {0} {1} > {2}'.format(
+            flag_set,
+            app_config.NEXT_ELECTION_DATE,
+            os.path.join(
+                app_config.ELEX_OUTPUT_FOLDER,
+                RESULTS_FILENAME_PREFIX + make_flag_set_uid(flag_set) + '.csv'
+            )
+        )
+        for flag_set in flag_sets
+    ]
 
     with shell_env(**app_config.database):
-        with settings(warn_only=True), hide('output', 'running'):
-            cmd_output = local(cmd, capture=True)
-
-        # `elex` exit code `64` indicates that no new data was found,
-        # and that the previous set of results will be re-used instead
-        if cmd_output.succeeded or cmd_output.return_code == 64:
-            delete_results()
+        for cmd in cmds:
             with hide('output', 'running'):
-                local('cat {0}/results.csv | psql {1} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(
+                cmd_output = local(cmd, capture=True)
+
+            # `elex` exit code `64` indicates that no new data was found,
+            # and that the previous set of results will be re-used instead
+            if not cmd_output.succeeded and cmd_output.return_code != 64:
+                logger.critical("ERROR GETTING RESULTS")
+                logger.critical(cmd_output.stderr)
+                break
+        else:
+            delete_results()
+
+            results_filenames = [
+                os.path.join(
                     app_config.ELEX_OUTPUT_FOLDER,
+                    RESULTS_FILENAME_PREFIX + make_flag_set_uid(flag_set) + '.csv'
+                )
+                for flag_set in flag_sets
+            ]
+            with hide('output', 'running'):
+                local('csvstack {0} | psql {1} -c "COPY result FROM stdin DELIMITER \',\' CSV HEADER;"'.format(
+                    ' '.join(results_filenames),
                     app_config.database['PGURI']
                 ))
 
-        else:
-            print("ERROR GETTING RESULTS")
-            print(cmd_output.stderr)
-
-    logger.info('results loaded')
+            logger.info('results loaded')
 
 
 @task
@@ -196,10 +222,11 @@ def create_race_meta():
 def copy_data_for_graphics():
     assert os.path.isdir(app_config.GRAPHICS_DATA_OUTPUT_FOLDER), \
             "Make sure that the local data output directory exists: `{}`".format(app_config.GRAPHICS_DATA_OUTPUT_FOLDER)
-    local('cp -r {0}/*.json {1}'.format(
-        app_config.DATA_OUTPUT_FOLDER,
-        app_config.GRAPHICS_DATA_OUTPUT_FOLDER
-    ))
+    with hide('output', 'running'):
+        local('cp -r {0}/*.json {1}'.format(
+            app_config.DATA_OUTPUT_FOLDER,
+            app_config.GRAPHICS_DATA_OUTPUT_FOLDER
+        ))
 
 
 @task

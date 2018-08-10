@@ -22,7 +22,6 @@ services:
   bootstrap_db:
     depends_on:
       - database
-      - fakeapserver
     build:
       context: .
       dockerfile: Dockerfile
@@ -31,7 +30,6 @@ services:
       - .:/opt/elections18
     environment:
       - elections18_POSTGRES_HOST=database
-      - AP_API_BASE_URL=http://fakeapserver:8002/elections/2016/ap-deja-vu
       - AP_API_KEY
 
   daemon:
@@ -46,8 +44,9 @@ services:
       # This allows rendered data to be shared with the front-end repo
       - ../elections18-graphics:/opt/elections18-graphics
     environment:
-      - elections18_POSTGRES_HOST=database
+      # Comment out the `AP_API_BASE_URL` line to use the actual AP server
       - AP_API_BASE_URL=http://fakeapserver:8002/elections/2016/ap-deja-vu
+      - elections18_POSTGRES_HOST=database
       - AP_API_KEY
 
   app:
