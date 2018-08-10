@@ -399,7 +399,7 @@ def collate_other_candidates(serialized_results):
             other_winner = False
             filtered = []
             for result in val:
-                if result['party'] not in ACCEPTED_PARTIES and (result['raceid'] != '36602' and result['last'] != 'Babinec'):
+                if result['party'] not in ACCEPTED_PARTIES:
                     other_votecount += result['votecount']
                     other_votepct += result['votepct']
                     if result.get('npr_winner') is True:
