@@ -63,6 +63,11 @@ BALLOT_MEASURE_SELECTIONS = COMMON_SELECTIONS + [
     models.Result.is_ballot_measure,
 ]
 
+COUNTY_SELECTIONS = COMMON_SELECTIONS + [
+    models.Result.reportingunitname,
+    models.Result.fipscode
+]
+
 CALLS_SELECTIONS = [
     models.Call.accept_ap,
     models.Call.override_winner
@@ -83,6 +88,21 @@ SELECTIONS_LOOKUP = {
     'house': HOUSE_SELECTIONS,
     'ballot_measures': BALLOT_MEASURE_SELECTIONS
 }
+
+OFFICENAME_LOOKUP = {
+    'senate': 'U.S. Senate',
+    'governor': 'Governor'
+}
+
+
+def _select_county_results(statepostal, office):
+    results = models.Result.select().where(
+        (models.Result.level == 'county') | (models.Result.level == 'state'),
+        models.Result.officename == OFFICENAME_LOOKUP[office],
+        models.Result.statepostal == statepostal
+    )
+
+    return results
 
 
 def _select_governor_results():
@@ -212,6 +232,26 @@ def render_top_level_numbers():
 
 
 @task
+def render_county_results(office):
+    states = models.Result.select(models.Result.statepostal).distinct()
+
+    Parallel(n_jobs=NUM_CORES)(delayed(_render_county)(state.statepostal, office) for state in states)
+
+
+def _render_county(statepostal, office):
+    results = _select_county_results(statepostal, office)
+    serialized_results = _serialize_by_key(results, COUNTY_SELECTIONS, 'fipscode', collate_other=True)
+
+    # No need to render if the state doesn't have that type of race
+    if serialized_results['results']:
+        filename = '{0}-counties-{1}.json'.format(
+            statepostal.lower(),
+            office
+        )
+        _write_json_file(serialized_results, filename)
+
+
+@task
 def render_governor_results():
     results = _select_governor_results()
 
@@ -304,9 +344,8 @@ def _serialize_for_big_board(results, selections, key='raceid'):
         result_dict = model_to_dict(result, backrefs=True, only=selections)
         if result.level not in uncallable_levels:
             _set_meta(result, result_dict)
-
-        if result.officename in pickup_offices:
-            _set_pickup(result, result_dict)
+            if result.officename in pickup_offices:
+                _set_pickup(result, result_dict)
 
         if not serialized_results['results'].get(result.meta[0].poll_closing):
             serialized_results['results'][result.meta[0].poll_closing] = {}
@@ -341,9 +380,8 @@ def _serialize_by_key(results, selections, key, collate_other=False):
 
             if result.level not in uncallable_levels:
                 _set_meta(result, result_dict)
-
-            if result.officename in pickup_offices:
-                _set_pickup(result, result_dict)
+                if result.officename in pickup_offices:
+                    _set_pickup(result, result_dict)
 
             # handle state results in the county files
             if key == 'fipscode' and result.level == 'state':
@@ -468,3 +506,5 @@ def render_all():
     render_ballot_measure_results()
     render_house_results()
     render_state_results()
+    render_county_results('senate')
+    render_county_results('governor')
