@@ -127,7 +127,7 @@ def load_results(initialize=False):
 
     with shell_env(**app_config.database):
         for cmd in cmds:
-            with hide('output', 'running'):
+            with settings(warn_only=True), hide('output', 'running'):
                 cmd_output = local(cmd, capture=True)
 
             # `elex` exit code `64` indicates that no new data was found,
