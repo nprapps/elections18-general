@@ -97,7 +97,7 @@ DEBUG = True
 """
 COPY EDITING
 """
-COPY_GOOGLE_DOC_KEY = '1pja8aNw24ZGZTrfO8TSQCfN76gQrj6OhEcs07uz0_C0'
+COPY_GOOGLE_DOC_KEY = '1bvDjGjsQkRnFoMnBaLob0Tcp68j4Gx4_605dvIfTA38'
 COPY_PATH = 'data/copy.xlsx'
 
 CALENDAR_GOOGLE_DOC_KEY = '1pfTPmeWGTQlw_7efXcnMoblarzyaz_zjDzqBfLFnLYg'
