@@ -6,10 +6,10 @@ Commands that update or process the application data.
 import app_config
 import csv
 import json
-import hashlib
 import logging
 import math
 import os
+import re
 from time import sleep
 
 import copytext
@@ -80,8 +80,20 @@ def delete_results():
         ))
 
 
-def make_flag_set_uid(flag_set):
-    return hashlib.md5(flag_set.encode('utf-8')).hexdigest()
+def get_valid_filename(s):
+    """
+    Return the given string converted to a string that can be used for a clean
+    filename. Remove leading and trailing spaces; convert other spaces to
+    underscores; and remove anything that is not an alphanumeric, dash,
+    underscore, or dot.
+    >>> get_valid_filename("john's portrait in 2004.jpg")
+    'johns_portrait_in_2004.jpg'
+
+    Function sourced from Django 2.1
+    https://github.com/django/django/blob/master/django/utils/text.py
+    """
+    s = str(s).strip().replace(' ', '_')
+    return re.sub(r'(?u)[^-\w.]', '', s)
 
 
 @task
@@ -107,7 +119,7 @@ def load_results(initialize=False):
             app_config.NEXT_ELECTION_DATE,
             os.path.join(
                 app_config.ELEX_OUTPUT_FOLDER,
-                RESULTS_FILENAME_PREFIX + make_flag_set_uid(flag_set) + '.csv'
+                RESULTS_FILENAME_PREFIX + get_valid_filename(flag_set) + '.csv'
             )
         )
         for flag_set in flag_sets
@@ -130,7 +142,7 @@ def load_results(initialize=False):
             results_filenames = [
                 os.path.join(
                     app_config.ELEX_OUTPUT_FOLDER,
-                    RESULTS_FILENAME_PREFIX + make_flag_set_uid(flag_set) + '.csv'
+                    RESULTS_FILENAME_PREFIX + get_valid_filename(flag_set) + '.csv'
                 )
                 for flag_set in flag_sets
             ]
