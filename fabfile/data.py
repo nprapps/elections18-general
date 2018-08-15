@@ -127,6 +127,9 @@ def load_results(initialize=False):
 
     with shell_env(**app_config.database):
         for cmd in cmds:
+            # The `warn_only` option turns errors into warning messages
+            # This allows us to handle errors on our own terms,
+            # like the `64` code below
             with settings(warn_only=True), hide('output', 'running'):
                 cmd_output = local(cmd, capture=True)
 
