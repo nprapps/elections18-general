@@ -286,6 +286,21 @@ def build_current_congress():
 
 
 @task
+def write_unemployment_csv(start_state='AA'):
+    """
+    Write county-level unemployment data to data/unemployment.csv.
+    Will overwrite anything that was there.
+
+    Assumes you have a document in data/unemployment.tsv
+    that is similar to https://www.bls.gov/lau/laucnty17.txt
+    which was found at https://www.bls.gov/lau/#cntyaa
+    """
+    pass
+    # LAUS Code,State FIPS Code,County FIPS Code,County Name/State Abbreviation,Year,Labor Force,Employed,Unemployed,Unemployment Rate (%)
+    # CN0100100000000,01,001,"Autauga County, AL",2015,"25,308     ","23,981     ","1,327     ",5.2
+    # CN0100300000000,01,003,"Baldwin County, AL",2015,"87,316     ","82,525     ","4,791     ",5.5
+
+@task
 def get_census_data(start_state='AA'):
     state_results = models.Result.select(models.Result.statepostal).distinct().order_by(models.Result.statepostal)
 
