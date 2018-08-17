@@ -436,20 +436,60 @@ def _calculate_bop(result, bop):
 def collate_other_candidates(serialized_results):
     # Create an "Other" candidate, to simplify front-end visuals,
     # and minimize filesize of JSON dumps
+
+    # Here's a list of which candidates should and should not be turned
+    # into "Other"s, based on the parties that are coming in:
+
+    # Standard competitive races:
+    # - D,R,I,I,... -> D,R,Oth
+    # - D,R -> D,R
+    # - D,I -> D,I
+    # - R,I -> R,I
+
+    # Less likely, relatively uncontested races:
+    # - D,I,I -> D,I,Oth
+    # - R,I,I -> R,I,Oth
+
+    # Top-two general election (eg, California or Louisiana):
+    # - D,D -> D,D
+    # - R,R -> R,R
+
+    # Uncontested races:
+    # - D -> D
+    # - R -> R
+    # - I -> I
+
+    # This won't happen for a top-of-ticket seat, but it's handled:
+    # - I,I,I -> I,I,Oth
+    # - I,I -> I,I
+
+    TARGET_CANDIDATE_LIST_LENGTH = 2
+
     for key, val in serialized_results['results'].items():
         if isinstance(val, list):
+            # Make sure that more prominent third-party candidates come first
+            # But only order by votes if there are any votes in so far
+            if val[0]['precinctsreporting'] > 0:
+                val.sort(key=lambda c: c['votecount'], reverse=True)
+
             other_votecount = 0
             other_votepct = 0
             other_winner = False
             filtered = []
+
+            accepted_party_count = len([c for c in val if c['party'] in ACCEPTED_PARTIES])
+            third_party_slots = TARGET_CANDIDATE_LIST_LENGTH - accepted_party_count
             for result in val:
-                if result['party'] not in ACCEPTED_PARTIES:
+                if result['party'] in ACCEPTED_PARTIES:
+                    filtered.append(result)
+                elif third_party_slots > 0:
+                    third_party_slots -= 1
+                    filtered.append(result)
+                else:
                     other_votecount += result['votecount']
                     other_votepct += result['votepct']
                     if result.get('npr_winner') is True:
                         other_winner = True
-                else:
-                    filtered.append(result)
 
             # Don't create an "Other" if there are _only_ main-party
             # candidates in the race
