@@ -301,8 +301,11 @@ def get_census_data(start_state='AA'):
         logging.info('getting', state)
         output = {}
         fips_results = models.Result.select(models.Result.fipscode).distinct().where(models.Result.statepostal == state).order_by(models.Result.fipscode)
+        count = 0
+        total = len(fips_results)
         for result in fips_results:
             if result.fipscode:
+                count += 1
                 if result.fipscode == '02000':
                     geo_id = '04000US02'
                 elif result.fipscode == '46102':
@@ -315,9 +318,9 @@ def get_census_data(start_state='AA'):
                 }
                 response = requests.get(CENSUS_REPORTER_URL, params=params)
                 if response.status_code == 200:
-                    print('fipscode succeeded', result.fipscode)
+                    print('fipscode succeeded', result.fipscode, count, 'counties done, out of', total, 'in', state)
                     output[result.fipscode] = response.json()
-                    sleep(2)
+                    sleep(1)
                 else:
                     print('fipscode failed:', result.fipscode, response.status_code)
                     sleep(10)
@@ -492,6 +495,7 @@ def save_old_data():
             census_json = json.load(c)
 
         fips_results = models.Result.select(models.Result.fipscode).distinct().where(models.Result.statepostal == state, models.Result.fipscode is not None).order_by(models.Result.fipscode)
+
         for result in fips_results:
             print('extracting', result.fipscode)
 
