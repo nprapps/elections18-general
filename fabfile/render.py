@@ -470,7 +470,7 @@ def collate_other_candidates(serialized_results):
             # Make sure that more prominent third-party candidates come first
             # But only order by votes if there are any votes in so far
             if val[0]['precinctsreporting'] > 0:
-                val.sort(key=lambda c: c['votecount'])
+                val.sort(key=lambda c: c['votecount'], reverse=True)
 
             other_votecount = 0
             other_votepct = 0
