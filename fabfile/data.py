@@ -215,20 +215,14 @@ def create_race_meta():
             seat = '{0}-{1}'.format(result.statepostal, result.seatnum)
             house_row = list(filter(lambda x: x['seat'] == seat, house_sheet))[0]
             meta_obj['current_party'] = house_row['party']
-
-            if 'competitive' in house_row['expected']:
-                meta_obj['expected'] = 'competitive'
-            else:
-                meta_obj['expected'] = house_row['expected']
+            # Handle non-voting members that are tracked in our visuals,
+            # such as DC's House representative
+            meta_obj['voting_member'] = (house_row['voting_member'] == 'True')
+            meta_obj['key_race'] = (house_row['key_race'] == 'True')
 
         if result.level == 'state' and result.officename == 'U.S. Senate':
             senate_row = list(filter(lambda x: x['state'] == result.statepostal, senate_sheet))[0]
             meta_obj['current_party'] = senate_row['party']
-
-            if 'competitive' in senate_row['expected']:
-                meta_obj['expected'] = 'competitive'
-            else:
-                meta_obj['expected'] = senate_row['expected']
 
         models.RaceMeta.create(**meta_obj)
 

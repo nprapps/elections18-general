@@ -111,3 +111,5 @@ class RaceMeta(BaseModel):
     first_results = CharField(null=True)
     current_party = CharField(null=True)
     expected = CharField(null=True)
+    voting_member = BooleanField(default=True)
+    key_race = BooleanField(default=False)

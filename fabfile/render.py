@@ -77,7 +77,7 @@ RACE_META_SELECTIONS = [
     models.RaceMeta.poll_closing,
     models.RaceMeta.current_party,
     models.RaceMeta.full_poll_closing,
-    models.RaceMeta.expected
+    models.RaceMeta.key_race
 ]
 
 ACCEPTED_PARTIES = ['Dem', 'GOP', 'Yes', 'No']
@@ -115,19 +115,24 @@ def _select_governor_results():
 
 
 def _select_selected_house_results():
-    results = models.Result.select().where(
+    results = models.Result.select().join(models.RaceMeta).where(
         models.Result.level == 'state',
         models.Result.officename == 'U.S. House',
-        models.Result.raceid << app_config.SELECTED_HOUSE_RACES
+        # `peewee` requires using `==` instead of `is` for boolean conditions
+        # https://github.com/coleifer/peewee/issues/612
+        models.RaceMeta.key_race == True  # NOQA
     )
 
     return results
 
 
 def _select_all_house_results():
-    results = models.Result.select().where(
+    results = models.Result.select().join(models.RaceMeta).where(
         models.Result.level == 'state',
         models.Result.officename == 'U.S. House',
+        # `peewee` requires using `==` instead of `is` for boolean conditions
+        # https://github.com/coleifer/peewee/issues/612
+        models.RaceMeta.voting_member == True  # NOQA
     )
 
     return results
@@ -156,6 +161,31 @@ def _select_ballot_measure_results():
 @task
 def render_top_level_numbers():
     # init with parties that already have seats
+
+    # TO-DO: Here are the 2018 numbers, for use once the AP starts
+    # running its 2018 tests in October
+    # senate_bop = {
+    #     'total_seats': 100,
+    #     'majority': 51,
+    #     'uncalled_races': 35,
+    #     'last_updated': None,
+    #     'Dem': {
+    #         'seats': 23,
+    #         'pickups': 0,
+    #         'needed': 28
+    #     },
+    #     'GOP': {
+    #         'seats': 42,
+    #         'pickups': 0,
+    #         'needed': 8
+    #     },
+    #     'Other': {
+    #         'seats': 0,
+    #         'pickups': 0,
+    #         'needed': 51
+    #     }
+    # }
+
     senate_bop = {
         'total_seats': 100,
         'majority': 51,
@@ -164,20 +194,17 @@ def render_top_level_numbers():
         'Dem': {
             'seats': 34,
             'pickups': 0,
-            'needed': 17,
-            'expected': 8
+            'needed': 17
         },
         'GOP': {
             'seats': 30,
             'pickups': 0,
-            'needed': 21,
-            'expected': 14
+            'needed': 21
         },
         'Other': {
             'seats': 2,
             'pickups': 0,
-            'needed': 49,
-            'expected': 0
+            'needed': 49
         }
     }
 
@@ -189,20 +216,17 @@ def render_top_level_numbers():
         'Dem': {
             'seats': 0,
             'pickups': 0,
-            'needed': 218,
-            'expected': 178
+            'needed': 218
         },
         'GOP': {
             'seats': 0,
             'pickups': 0,
-            'needed': 218,
-            'expected': 202
+            'needed': 218
         },
         'Other': {
             'seats': 0,
             'pickups': 0,
-            'needed': 218,
-            'expected': 0
+            'needed': 218
         }
     }
 
@@ -422,12 +446,6 @@ def _calculate_bop(result, bop):
     if result.is_pickup():
         bop[party]['pickups'] += 1
         bop[result.meta[0].current_party]['pickups'] -= 1
-
-    if result.is_expected():
-        bop[party]['expected'] -= 1
-
-    if result.is_not_expected():
-        bop[result.meta[0].expected]['expected'] -= 1
 
     if not bop['last_updated'] or result.lastupdated > bop['last_updated']:
         bop['last_updated'] = result.lastupdated
