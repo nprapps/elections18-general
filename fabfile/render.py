@@ -130,6 +130,7 @@ def _select_all_house_results():
     results = models.Result.select().join(models.RaceMeta).where(
         models.Result.level == 'state',
         models.Result.officename == 'U.S. House',
+        ~(models.Result.racetype.contains("Special")),
         # `peewee` requires using `==` instead of `is` for boolean conditions
         # https://github.com/coleifer/peewee/issues/612
         models.RaceMeta.voting_member == True  # NOQA
