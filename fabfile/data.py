@@ -280,6 +280,21 @@ def build_current_congress():
 
 
 @task
+def write_unemployment_csv(start_state='AA'):
+    """
+    Write county-level unemployment data to data/unemployment.csv.
+    Will overwrite anything that was there.
+
+    Assumes you have a document in data/unemployment.tsv
+    that is similar to https://www.bls.gov/lau/laucnty17.txt
+    which was found at https://www.bls.gov/lau/#cntyaa
+    """
+    pass
+    # LAUS Code,State FIPS Code,County FIPS Code,County Name/State Abbreviation,Year,Labor Force,Employed,Unemployed,Unemployment Rate (%)
+    # CN0100100000000,01,001,"Autauga County, AL",2015,"25,308     ","23,981     ","1,327     ",5.2
+    # CN0100300000000,01,003,"Baldwin County, AL",2015,"87,316     ","82,525     ","4,791     ",5.5
+
+@task
 def get_census_data(start_state='AA'):
     state_results = models.Result.select(models.Result.statepostal).distinct().order_by(models.Result.statepostal)
 
@@ -295,8 +310,11 @@ def get_census_data(start_state='AA'):
         logging.info('getting', state)
         output = {}
         fips_results = models.Result.select(models.Result.fipscode).distinct().where(models.Result.statepostal == state).order_by(models.Result.fipscode)
+        count = 0
+        total = len(fips_results)
         for result in fips_results:
             if result.fipscode:
+                count += 1
                 if result.fipscode == '02000':
                     geo_id = '04000US02'
                 elif result.fipscode == '46102':
@@ -309,9 +327,9 @@ def get_census_data(start_state='AA'):
                 }
                 response = requests.get(CENSUS_REPORTER_URL, params=params)
                 if response.status_code == 200:
-                    print('fipscode succeeded', result.fipscode)
+                    print('fipscode succeeded', result.fipscode, count, 'counties done, out of', total, 'in', state)
                     output[result.fipscode] = response.json()
-                    sleep(2)
+                    sleep(1)
                 else:
                     print('fipscode failed:', result.fipscode, response.status_code)
                     sleep(10)
@@ -437,6 +455,9 @@ def calculate_percent_bachelors(education, education_error):
 
 
 def extract_2012_data(fipscode, filename):
+    """
+    Called by save_old_data()
+    """
     with open(filename) as f:
         reader = csv.DictReader(f)
         obama_row = [row for row in reader if row['fipscode'] == fipscode and row['last'] == 'Obama' and row['level'] != 'township']
@@ -461,6 +482,9 @@ def extract_2012_data(fipscode, filename):
 
 
 def extract_unemployment_data(fipscode, filename):
+    """
+    Called by save_old_data()
+    """
     with open(filename) as f:
         reader = csv.DictReader(f)
         state_fips = fipscode[:2]
@@ -475,6 +499,9 @@ def extract_unemployment_data(fipscode, filename):
 
 @task
 def save_old_data():
+    """
+    Must run get_census_data() before running this.
+    """
     state_results = models.Result.select(models.Result.statepostal).distinct().order_by(models.Result.statepostal)
 
     for state_result in state_results:
@@ -486,6 +513,7 @@ def save_old_data():
             census_json = json.load(c)
 
         fips_results = models.Result.select(models.Result.fipscode).distinct().where(models.Result.statepostal == state, models.Result.fipscode is not None).order_by(models.Result.fipscode)
+
         for result in fips_results:
             print('extracting', result.fipscode)
 
