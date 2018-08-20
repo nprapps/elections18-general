@@ -454,21 +454,25 @@ def calculate_percent_bachelors(education, education_error):
     return percent_bachelors, error
 
 
-def extract_2012_data(fipscode, filename):
+def extract_margin_data(fipscode, filename):
     """
     Called by save_old_data()
+    Relies on a spreadsheet that looks something like this https://raw.githubusercontent.com/nprapps/elections16-general/master/data/twentyTwelve.csv
     """
+    # Candidate one must be the democratic nominee
+    candidate_one = 'Obama'
+    candidate_two = 'Romney'
     with open(filename) as f:
         reader = csv.DictReader(f)
-        obama_row = [row for row in reader if row['fipscode'] == fipscode and row['last'] == 'Obama' and row['level'] != 'township']
+        candidate_one_row = [row for row in reader if row['fipscode'] == fipscode and row['last'] == candidate_one and row['level'] != 'township']
         f.seek(0)
-        romney_row = [row for row in reader if row['fipscode'] == fipscode and row['last'] == 'Romney' and row['level'] != 'township']
+        candidate_two_row = [row for row in reader if row['fipscode'] == fipscode and row['last'] == candidate_two and row['level'] != 'township']
 
-        if obama_row and romney_row:
-            obama_result = obama_row[0]['votepct']
-            romney_result = romney_row[0]['votepct']
+        if candidate_one_row and candidate_two_row:
+            one_result = candidate_one_row[0]['votepct']
+            two_result = candidate_two_row[0]['votepct']
 
-            difference = (float(obama_result) * 100) - (float(romney_result) * 100)
+            difference = (float(one_result) * 100) - (float(two_result) * 100)
 
             if difference > 0:
                 margin = 'D +{0}'.format(round(difference))
@@ -518,7 +522,7 @@ def save_old_data():
             print('extracting', result.fipscode)
 
             unemployment = extract_unemployment_data(result.fipscode, 'data/unemployment.csv')
-            past_margin = extract_2012_data(result.fipscode, 'data/twentyTwelve.csv')
+            past_margin = extract_margin_data(result.fipscode, 'data/twentyTwelve.csv')
             census = extract_census_data(result.fipscode, census_json)
 
             this_row = {
