@@ -38,7 +38,14 @@
                 {% for id, results in races.items() %}
                 <div class="row">
                     <div class="col-md-8">
-                        <h3>{{ results[0].statename }}{% if results[0].reportingunitname %}: {{ results[0].reportingunitname }} {% endif %} {{ results[0].officename }} {% if results[0].seatname %} {{ results[0].seatname }} {% endif %}</h3>
+                        <h3>
+                            {{ results[0].statename }}{% if results[0].reportingunitname %}: {{ results[0].reportingunitname }}{% endif %}, {{ results[0].officename }}{% if results[0].seatname %}, {{ results[0].seatname }} {% endif %}
+
+                            <!-- Especially cll out special elections, to avoid confusion/accidents -->
+                            {% if 'special' in results[0].racetype|lower %}
+                                <span class="label label-warning">special</span>
+                            {% endif %}
+                        </h3>
                     </div>
                     <div class="col-md-4">
                         <div class="ap-btns">
