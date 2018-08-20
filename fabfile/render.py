@@ -325,7 +325,8 @@ def _render_state(statepostal):
         house = models.Result.select().where(
             models.Result.level == 'state',
             models.Result.officename == 'U.S. House',
-            models.Result.statepostal == statepostal
+            models.Result.statepostal == statepostal,
+            ~(models.Result.racetype.contains("Special"))
         )
         governor = models.Result.select().where(
             models.Result.level == 'state',
