@@ -11,19 +11,16 @@
     <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
             <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#cms-nav">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
                 <a class="navbar-brand" href="#">AP Calls CMS</a>
             </div>
 
-            <div class="collapse navbar-collapse" id="cms-nav">
-                <ul class="nav navbar-nav">
-                </ul>
-            </div>
+            <ul class="nav navbar-nav">
+                {% for office_slug, office_name in offices.items() %}
+                    <li class="nav-item">
+                        <a class="navbar-link" href="../{{ office_slug }}">{{ office_name }}</a>
+                    <li>
+                {% endfor %}
+            </ul>
         </div>
     </nav>
 
@@ -38,7 +35,14 @@
                 {% for id, results in races.items() %}
                 <div class="row">
                     <div class="col-md-8">
-                        <h3>{{ results[0].statename }}{% if results[0].reportingunitname %}: {{ results[0].reportingunitname }} {% endif %} {{ results[0].officename }} {% if results[0].seatname %} {{ results[0].seatname }} {% endif %}</h3>
+                        <h3>
+                            {{ results[0].statename }}{% if results[0].reportingunitname %}: {{ results[0].reportingunitname }}{% endif %}, {{ results[0].officename }}{% if results[0].seatname %}, {{ results[0].seatname }} {% endif %}
+
+                            <!-- Especially call out special elections, to avoid confusion/accidents -->
+                            {% if 'special' in results[0].racetype|lower %}
+                                <span class="label label-warning">special</span>
+                            {% endif %}
+                        </h3>
                     </div>
                     <div class="col-md-4">
                         <div class="ap-btns">

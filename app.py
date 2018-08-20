@@ -41,7 +41,6 @@ admin.add_view(ModelView(models.Call))
 SLUG_TO_OFFICENAME = {
     'senate': 'U.S. Senate',
     'house': 'U.S. House',
-    'president': 'President',
     'governor': 'Governor'
 }
 
@@ -52,8 +51,10 @@ def calls_admin(office):
     results = app_utils.filter_results(officename)
     grouped = app_utils.group_results_by_race(results, officename)
 
+
     context = make_context(asset_depth=1)
     context.update({
+        'offices': SLUG_TO_OFFICENAME,
         'races': grouped
     })
 
