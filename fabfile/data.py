@@ -458,6 +458,8 @@ def extract_margin_data(fipscode, filename):
     """
     Called by save_old_data()
     Relies on a spreadsheet that looks something like this https://raw.githubusercontent.com/nprapps/elections16-general/master/data/twentyTwelve.csv
+    This is the postgres query used in 2016 to get 2012 results
+    \copy (SELECT * FROM result WHERE level = 'national' AND officename = 'President') to './prior.csv' with csv
     """
     # Candidate one must be the democratic nominee
     candidate_one = 'Obama'
@@ -519,15 +521,17 @@ def save_old_data():
         fips_results = models.Result.select(models.Result.fipscode).distinct().where(models.Result.statepostal == state, models.Result.fipscode is not None).order_by(models.Result.fipscode)
 
         for result in fips_results:
+            if not result.fipscode:
+                continue
             print('extracting', result.fipscode)
 
             unemployment = extract_unemployment_data(result.fipscode, 'data/unemployment.csv')
-            past_margin = extract_margin_data(result.fipscode, 'data/twentyTwelve.csv')
+            #past_margin = extract_margin_data(result.fipscode, 'data/twentyTwelve.csv')
             census = extract_census_data(result.fipscode, census_json)
 
             this_row = {
                 'unemployment': unemployment,
-                'past_margin': past_margin,
+                #'past_margin': past_margin,
                 'census': census
             }
 
