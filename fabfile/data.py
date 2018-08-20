@@ -522,16 +522,17 @@ def save_old_data():
 
         for result in fips_results:
             if not result.fipscode:
+                print('No FIPSCODE')
                 continue
             print('extracting', result.fipscode)
 
             unemployment = extract_unemployment_data(result.fipscode, 'data/unemployment.csv')
-            #past_margin = extract_margin_data(result.fipscode, 'data/twentyTwelve.csv')
+            past_margin = extract_margin_data(result.fipscode, 'data/twentyTwelve.csv')
             census = extract_census_data(result.fipscode, census_json)
 
             this_row = {
                 'unemployment': unemployment,
-                #'past_margin': past_margin,
+                'past_margin': past_margin,
                 'census': census
             }
 
