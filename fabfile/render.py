@@ -118,9 +118,7 @@ def _select_selected_house_results():
     results = models.Result.select().join(models.RaceMeta).where(
         models.Result.level == 'state',
         models.Result.officename == 'U.S. House',
-        # `peewee` requires using `==` instead of `is` for boolean conditions
-        # https://github.com/coleifer/peewee/issues/612
-        models.RaceMeta.key_race == True  # NOQA
+        models.RaceMeta.key_race
     )
 
     return results
@@ -130,10 +128,8 @@ def _select_all_house_results():
     results = models.Result.select().join(models.RaceMeta).where(
         models.Result.level == 'state',
         models.Result.officename == 'U.S. House',
-        ~(models.Result.racetype.contains("Special")),
-        # `peewee` requires using `==` instead of `is` for boolean conditions
-        # https://github.com/coleifer/peewee/issues/612
-        models.RaceMeta.voting_member == True  # NOQA
+        ~(models.Result.is_special_election),
+        models.RaceMeta.voting_member
     )
 
     return results
@@ -151,9 +147,7 @@ def _select_senate_results():
 def _select_ballot_measure_results():
     results = models.Result.select().where(
         models.Result.level == 'state',
-        # `peewee` requires using `==` instead of `is` for boolean conditions
-        # https://github.com/coleifer/peewee/issues/612
-        models.Result.is_ballot_measure == True  # NOQA
+        models.Result.is_ballot_measure
     )
 
     return results
@@ -326,7 +320,7 @@ def _render_state(statepostal):
             models.Result.level == 'state',
             models.Result.officename == 'U.S. House',
             models.Result.statepostal == statepostal,
-            ~(models.Result.racetype.contains("Special"))
+            ~(models.Result.is_special_election)
         )
         governor = models.Result.select().where(
             models.Result.level == 'state',
@@ -335,9 +329,7 @@ def _render_state(statepostal):
         )
         ballot_measures = models.Result.select().where(
             models.Result.level == 'state',
-            # `peewee` requires using `==` instead of `is` for boolean conditions
-            # https://github.com/coleifer/peewee/issues/612
-            models.Result.is_ballot_measure == True,  # NOQA
+            models.Result.is_ballot_measure,
             models.Result.statepostal == statepostal
         )
 
