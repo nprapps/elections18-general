@@ -194,6 +194,7 @@ def create_race_meta():
     calendar_sheet = calendar['poll_times']
     senate_sheet = calendar['senate_seats']
     house_sheet = calendar['house_seats']
+    ballot_measure_sheet = calendar['ballot_measures']
 
     results = models.Result.select()
     for result in results:
@@ -237,6 +238,13 @@ def create_race_meta():
                 senate_sheet
             ))[0]
             meta_obj['current_party'] = senate_row['party']
+
+        if result.level == 'state' and result.is_ballot_measure:
+            measure_row = list(filter(
+                lambda x: x['state'] == result.statepostal and x['name'] == result.seatname,
+                ballot_measure_sheet
+            ))[0]
+            meta_obj['ballot_measure_theme'] = measure_row['big_board_theme']
 
         models.RaceMeta.create(**meta_obj)
 

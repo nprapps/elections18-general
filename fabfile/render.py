@@ -61,6 +61,7 @@ BALLOT_MEASURE_SELECTIONS = COMMON_SELECTIONS + [
     models.Result.officename,
     models.Result.seatname,
     models.Result.is_ballot_measure,
+    models.Result
 ]
 
 COUNTY_SELECTIONS = COMMON_SELECTIONS + [
@@ -75,9 +76,10 @@ CALLS_SELECTIONS = [
 
 RACE_META_SELECTIONS = [
     models.RaceMeta.poll_closing,
-    models.RaceMeta.current_party,
     models.RaceMeta.full_poll_closing,
-    models.RaceMeta.key_race
+    models.RaceMeta.current_party,
+    models.RaceMeta.key_race,
+    models.RaceMeta.ballot_measure_theme
 ]
 
 ACCEPTED_PARTIES = ['Dem', 'GOP', 'Yes', 'No']
@@ -145,9 +147,10 @@ def _select_senate_results():
 
 
 def _select_ballot_measure_results():
-    results = models.Result.select().where(
+    results = models.Result.select().join(models.RaceMeta).where(
         models.Result.level == 'state',
-        models.Result.is_ballot_measure
+        models.Result.is_ballot_measure,
+        models.RaceMeta.ballot_measure_theme != ''
     )
 
     return results
@@ -298,7 +301,7 @@ def render_senate_results():
 def render_ballot_measure_results():
     results = _select_ballot_measure_results()
 
-    serialized_results = _serialize_for_big_board(results, BALLOT_MEASURE_SELECTIONS)
+    serialized_results = _serialize_for_big_board(results, BALLOT_MEASURE_SELECTIONS, bucket_key='ballot_measure_theme')
     _write_json_file(serialized_results, 'ballot-measures-national.json')
 
 
@@ -327,10 +330,12 @@ def _render_state(statepostal):
             models.Result.officename == 'Governor',
             models.Result.statepostal == statepostal
         )
-        ballot_measures = models.Result.select().where(
+        ballot_measures = models.Result.select().join(models.RaceMeta).where(
             models.Result.level == 'state',
             models.Result.is_ballot_measure,
-            models.Result.statepostal == statepostal
+            models.Result.statepostal == statepostal,
+            # Only include key ballot initiatives, even on state pages
+            models.RaceMeta.ballot_measure_theme != ''
         )
 
         state_results = {
@@ -353,7 +358,7 @@ uncallable_levels = ['county', 'township']
 pickup_offices = ['U.S. House', 'U.S. Senate']
 
 
-def _serialize_for_big_board(results, selections, key='raceid'):
+def _serialize_for_big_board(results, selections, key='raceid', bucket_key='poll_closing'):
     serialized_results = {
         'results': {}
     }
@@ -365,9 +370,6 @@ def _serialize_for_big_board(results, selections, key='raceid'):
             if result.officename in pickup_offices:
                 _set_pickup(result, result_dict)
 
-        if not serialized_results['results'].get(result.meta[0].poll_closing):
-            serialized_results['results'][result.meta[0].poll_closing] = {}
-
         if key == 'statepostal' and result.reportingunitname:
             m = re.search(r'\d$', result.reportingunitname)
             if m is not None:
@@ -377,11 +379,14 @@ def _serialize_for_big_board(results, selections, key='raceid'):
         else:
             dict_key = result_dict[key]
 
-        time_bucket = serialized_results['results'][result.meta[0].poll_closing]
-        if not time_bucket.get(dict_key):
-            time_bucket[dict_key] = []
+        bucket_value = getattr(result.meta[0], bucket_key)
+        if not serialized_results['results'].get(bucket_value):
+            serialized_results['results'][bucket_value] = {}
 
-        time_bucket[dict_key].append(result_dict)
+        bucketed = serialized_results['results'][bucket_value]
+        if not bucketed.get(dict_key):
+            bucketed[dict_key] = []
+        bucketed[dict_key].append(result_dict)
 
     serialized_results['last_updated'] = get_last_updated(serialized_results)
     return serialized_results
