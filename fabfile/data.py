@@ -460,10 +460,13 @@ def extract_margin_data(fipscode, filename):
     Relies on a spreadsheet that looks something like this https://raw.githubusercontent.com/nprapps/elections16-general/master/data/twentyTwelve.csv
     This is the postgres query used in 2016 to get 2012 results
     \copy (SELECT * FROM result WHERE level = 'national' AND officename = 'President') to './prior.csv' with csv
+
+    This is the elex command that also works, assuming you have `AP_API_KEY` set in your env and csvkit installed on your machine:
+    $ elex results 2016-11-08 --results-level fipscode --officeids P | csvcut -c fipscode,level,precinctsreportingpct,last,votepct
     """
     # Candidate one must be the democratic nominee
-    candidate_one = 'Obama'
-    candidate_two = 'Romney'
+    candidate_one = 'Clinton'
+    candidate_two = 'Trump'
     with open(filename) as f:
         reader = csv.DictReader(f)
         candidate_one_row = [row for row in reader if row['fipscode'] == fipscode and row['last'] == candidate_one and row['level'] != 'township']
@@ -527,7 +530,7 @@ def save_old_data():
             print('extracting', result.fipscode)
 
             unemployment = extract_unemployment_data(result.fipscode, 'data/unemployment.csv')
-            past_margin = extract_margin_data(result.fipscode, 'data/twentyTwelve.csv')
+            past_margin = extract_margin_data(result.fipscode, 'data/2016-presidential.csv')
             census = extract_census_data(result.fipscode, census_json)
 
             this_row = {
