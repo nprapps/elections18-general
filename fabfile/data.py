@@ -194,6 +194,7 @@ def create_race_meta():
     calendar_sheet = calendar['poll_times']
     senate_sheet = calendar['senate_seats']
     house_sheet = calendar['house_seats']
+    ballot_measure_sheet = calendar['ballot_measures']
 
     results = models.Result.select()
     for result in results:
@@ -211,9 +212,16 @@ def create_race_meta():
             meta_obj['first_results'] = calendar_row['first_results_est']
             meta_obj['full_poll_closing'] = calendar_row['time_all_est']
 
-        if result.level == 'state' and result.officename == 'U.S. House':
+        # Ignore special House elections, to avoid mis-assigning metadata
+        # These races should still get the poll metadata from above
+        if result.level == 'state' and \
+                result.officename == 'U.S. House' and \
+                not result.is_special_election:
             seat = '{0}-{1}'.format(result.statepostal, result.seatnum)
-            house_row = list(filter(lambda x: x['seat'] == seat, house_sheet))[0]
+            house_row = list(filter(
+                lambda x: x['seat'] == seat,
+                house_sheet
+            ))[0]
             meta_obj['current_party'] = house_row['party']
             # Handle non-voting members that are tracked in our visuals,
             # such as DC's House representative
@@ -221,8 +229,22 @@ def create_race_meta():
             meta_obj['key_race'] = (house_row['key_race'] == 'True')
 
         if result.level == 'state' and result.officename == 'U.S. Senate':
-            senate_row = list(filter(lambda x: x['state'] == result.statepostal, senate_sheet))[0]
+            senate_row = list(filter(
+                # Make sure to assign special election metadata accurately
+                # This doesn't need to happen for any other office type,
+                # since no other office has special elections that matter
+                # _and_ has multiple seats per state
+                lambda x: x['state'] == result.statepostal and result.is_special_election == (x['special'] == 'True'),
+                senate_sheet
+            ))[0]
             meta_obj['current_party'] = senate_row['party']
+
+        if result.level == 'state' and result.is_ballot_measure:
+            measure_row = list(filter(
+                lambda x: x['state'] == result.statepostal and x['name'] == result.seatname,
+                ballot_measure_sheet
+            ))[0]
+            meta_obj['ballot_measure_theme'] = measure_row['big_board_theme']
 
         models.RaceMeta.create(**meta_obj)
 

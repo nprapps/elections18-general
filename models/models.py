@@ -1,7 +1,8 @@
 import app_config
 
 from peewee import Model, PostgresqlDatabase
-from peewee import BooleanField, CharField, DateField, DateTimeField, DecimalField, ForeignKeyField, IntegerField
+from peewee import BooleanField, CharField, DateField, DateTimeField, DecimalField, ForeignKeyField, IntegerField, fn
+from playhouse.hybrid import hybrid_property
 
 import logging
 logger = logging.getLogger('peewee')
@@ -97,6 +98,17 @@ class Result(BaseModel):
         else:
             return False
 
+    @hybrid_property
+    def is_special_election(self):
+        return 'special' in self.racetype.lower()
+
+    # This is used when the property is called on the class, not an instance
+    # In these cases, the `peewee` SQL query logic is different from Python's
+    # http://docs.peewee-orm.com/en/latest/peewee/playhouse.html#hybrid
+    @is_special_election.expression
+    def is_special_election(cls):
+        return fn.Lower(cls.racetype).contains('special')
+
 
 class Call(BaseModel):
     call_id = ForeignKeyField(Result, related_name='call')
@@ -113,3 +125,4 @@ class RaceMeta(BaseModel):
     expected = CharField(null=True)
     voting_member = BooleanField(default=True)
     key_race = BooleanField(default=False)
+    ballot_measure_theme = CharField(null=True)
