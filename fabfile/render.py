@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import simplejson as json
+import copytext
 
 from datetime import datetime
 from fabric.api import task
@@ -251,6 +252,15 @@ def render_top_level_numbers():
     }
 
     _write_json_file(data, 'top-level-results.json')
+
+
+@task
+def render_get_caught_up():
+    copy = copytext.Copy(app_config.COPY_PATH)
+    sheet = copy['get_caught_up']
+    serialized_data = sheet.json()
+    filename = 'get-caught-up.json'
+    _write_json_file(serialized_data, filename)
 
 
 @task
