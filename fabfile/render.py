@@ -256,7 +256,9 @@ def render_top_level_numbers():
 
 @task
 def render_get_caught_up():
-    copy = copytext.Copy(app_config.COPY_PATH)
+    # Render the prose for the get-caught-up info box
+    # The Google Sheet that powers this will be regularly re-downloaded
+    copy = copytext.Copy(app_config.CALENDAR_PATH)
     sheet = copy['get_caught_up']
     serialized_data = json.loads(sheet.json())
     filename = 'get-caught-up.json'
@@ -567,11 +569,15 @@ def render_all():
     if os.path.isdir(app_config.DATA_OUTPUT_FOLDER):
         shutil.rmtree(app_config.DATA_OUTPUT_FOLDER)
     os.makedirs(app_config.DATA_OUTPUT_FOLDER)
+
     render_top_level_numbers()
+    render_get_caught_up()
+
     render_senate_results()
     render_governor_results()
     render_ballot_measure_results()
     render_house_results()
+
     render_state_results()
     render_county_results('senate')
     render_county_results('governor')
