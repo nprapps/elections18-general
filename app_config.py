@@ -164,6 +164,22 @@ ELEX_FTP_FLAGS = ''
 LOAD_RESULTS_INTERVAL = 12
 DATA_OUTPUT_FOLDER = '.rendered'
 
+# Our system typically only includes the Democrat and Republican
+# (or just the top/main two candidates) in the JSON files that get rendered.
+# Sometimes, we'll want to explicitly include a third-party candidate,
+# or include three or more candidates. Use this option to do so.
+# If no votes are in yet, we'll maintain the candidate orde provided.
+# If any votes are in, allow the candidates to be reordered by the system.
+# Surnames aren't the best identifiers here, but we're using them as such
+# in the front-end tables, so they should suffice in this case.
+# Structure: { 'AP RACE ID': [ 'Last Name 1', 'Last Name 2', ... ] }
+CANDIDATE_SET_OVERRIDES = {
+    # New York's 22nd House seat
+    '36602': ['Tenney', 'Myers', 'Babinec'],
+    # Alaska Senate seat
+    '2933': ['Murkowski', 'Miller', 'Stock']
+}
+
 """
 Utilities
 """

@@ -464,7 +464,9 @@ def _calculate_bop(result, bop):
 
 def collate_other_candidates(serialized_results):
     # Create an "Other" candidate, to simplify front-end visuals,
-    # and minimize filesize of JSON dumps
+    # and minimize filesize of JSON dumps. This may be overridden
+    # by `app_config.CANDIDATE_SET_OVERRIDES` if we want to explicitly
+    # include a third-party candidate or similar.
 
     # Here's a list of which candidates should and should not be turned
     # into "Other"s, based on the parties that are coming in:
@@ -493,12 +495,14 @@ def collate_other_candidates(serialized_results):
     # - I,I -> I,I
 
     TARGET_CANDIDATE_LIST_LENGTH = 2
+    races_to_override = app_config.CANDIDATE_SET_OVERRIDES.keys()
 
     for key, val in serialized_results['results'].items():
         if isinstance(val, list):
             # Make sure that more prominent third-party candidates come first
             # But only order by votes if there are any votes in so far
-            if val[0]['precinctsreporting'] > 0:
+            any_votes_yet = val[0]['precinctsreporting'] > 0
+            if any_votes_yet:
                 val.sort(key=lambda c: c['votecount'], reverse=True)
 
             other_votecount = 0
@@ -506,22 +510,45 @@ def collate_other_candidates(serialized_results):
             other_winner = False
             filtered = []
 
-            accepted_party_count = len([c for c in val if c['party'] in ACCEPTED_PARTIES])
-            third_party_slots = TARGET_CANDIDATE_LIST_LENGTH - accepted_party_count
-            for result in val:
-                if result['party'] in ACCEPTED_PARTIES:
-                    filtered.append(result)
-                elif third_party_slots > 0:
-                    third_party_slots -= 1
-                    filtered.append(result)
-                else:
-                    other_votecount += result['votecount']
-                    other_votepct += result['votepct']
-                    if result.get('npr_winner') is True:
-                        other_winner = True
+            # Need to compare against `val[0].raceid` instead of `key`,
+            # since sometimes `key` can be a county FIPS code rather
+            # than the `raceid` value itself
+            raceid = val[0]['raceid']
+            if raceid in races_to_override:
+                for result in val:
+                    if result['last'] in app_config.CANDIDATE_SET_OVERRIDES[raceid]:
+                        filtered.append(result)
+                    else:
+                        other_votecount += result['votecount']
+                        other_votepct += result['votepct']
+                        if result.get('npr_winner') is True:
+                            other_winner = True
+                # If no votes are present, reorder based on the sort-order
+                # of the override setting
+                if not any_votes_yet:
+                    resorted_filtered = []
+                    for surname in app_config.CANDIDATE_SET_OVERRIDES[key]:
+                        for result in filtered:
+                            if result['last'] == surname:
+                                resorted_filtered.append(result)
+                                break
+                    filtered = resorted_filtered
+            else:
+                accepted_party_count = len([c for c in val if c['party'] in ACCEPTED_PARTIES])
+                third_party_slots = TARGET_CANDIDATE_LIST_LENGTH - accepted_party_count
+                for result in val:
+                    if result['party'] in ACCEPTED_PARTIES:
+                        filtered.append(result)
+                    elif third_party_slots > 0:
+                        third_party_slots -= 1
+                        filtered.append(result)
+                    else:
+                        other_votecount += result['votecount']
+                        other_votepct += result['votepct']
+                        if result.get('npr_winner') is True:
+                            other_winner = True
 
-            # Don't create an "Other" if there are _only_ main-party
-            # candidates in the race
+            # Don't create an "Other" if no candidates were amalgomated into it
             if len(val) > len(filtered):
                 filtered.append({
                     'first': '',
