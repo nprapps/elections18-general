@@ -401,6 +401,14 @@ def _serialize_for_big_board(results, selections, key='raceid', bucket_key='poll
         bucketed[dict_key].append(result_dict)
 
     serialized_results['last_updated'] = get_last_updated(serialized_results)
+    # Run through other-collation mostly to allow candidate overrides,
+    # via `app_config.CANDIDATE_SET_OVERRIDES`, when a race has no votes yet
+    for bucket_value in serialized_results['results'].keys():
+        for race_key, results_for_a_race in serialized_results['results'][bucket_value].items():
+            serialized_results['results'][bucket_value][race_key] = collate_other_candidates(
+                results_for_a_race,
+                for_big_boards=True
+            )
     return serialized_results
 
 
@@ -432,7 +440,8 @@ def _serialize_by_key(results, selections, key, collate_other=False):
         serialized_results['last_updated'] = get_last_updated(serialized_results)
 
         if collate_other:
-            serialized_results = collate_other_candidates(serialized_results)
+            for race_key, results_for_a_race in serialized_results['results'].items():
+                serialized_results['results'][race_key] = collate_other_candidates(results_for_a_race)
 
         return serialized_results
 
@@ -462,7 +471,7 @@ def _calculate_bop(result, bop):
         bop['last_updated'] = result.lastupdated
 
 
-def collate_other_candidates(serialized_results):
+def collate_other_candidates(results_for_a_race, for_big_boards=False):
     # Create an "Other" candidate, to simplify front-end visuals,
     # and minimize filesize of JSON dumps. This may be overridden
     # by `app_config.CANDIDATE_SET_OVERRIDES` if we want to explicitly
@@ -497,70 +506,71 @@ def collate_other_candidates(serialized_results):
     TARGET_CANDIDATE_LIST_LENGTH = 2
     races_to_override = app_config.CANDIDATE_SET_OVERRIDES.keys()
 
-    for key, val in serialized_results['results'].items():
-        if isinstance(val, list):
-            # Make sure that more prominent third-party candidates come first
-            # But only order by votes if there are any votes in so far
-            any_votes_yet = val[0]['precinctsreporting'] > 0
-            if any_votes_yet:
-                val.sort(key=lambda c: c['votecount'], reverse=True)
+    # Make sure that more prominent third-party candidates come first
+    # But only order by votes if there are any votes in so far
+    any_votes_yet = results_for_a_race[0]['precinctsreporting'] > 0
+    if any_votes_yet:
+        results_for_a_race.sort(key=lambda c: c['votecount'], reverse=True)
 
-            other_votecount = 0
-            other_votepct = 0
-            other_winner = False
-            filtered = []
+    other_votecount = 0
+    other_votepct = 0
+    other_winner = False
+    filtered = []
 
-            # Need to compare against `val[0].raceid` instead of `key`,
-            # since sometimes `key` can be a county FIPS code rather
-            # than the `raceid` value itself
-            raceid = val[0]['raceid']
-            if raceid in races_to_override:
-                for result in val:
-                    if result['last'] in app_config.CANDIDATE_SET_OVERRIDES[raceid]:
-                        filtered.append(result)
-                    else:
-                        other_votecount += result['votecount']
-                        other_votepct += result['votepct']
-                        if result.get('npr_winner') is True:
-                            other_winner = True
-                # If no votes are present, reorder based on the sort-order
-                # of the override setting
-                if not any_votes_yet:
-                    resorted_filtered = []
-                    for surname in app_config.CANDIDATE_SET_OVERRIDES[key]:
-                        for result in filtered:
-                            if result['last'] == surname:
-                                resorted_filtered.append(result)
-                                break
-                    filtered = resorted_filtered
+    # Need to compare against `val[0].raceid` instead of `key`,
+    # since sometimes `key` can be a county FIPS code rather
+    # than the `raceid` value itself
+    raceid = results_for_a_race[0]['raceid']
+    if raceid in races_to_override:
+        for result in results_for_a_race:
+            if result['last'] in app_config.CANDIDATE_SET_OVERRIDES[raceid]:
+                filtered.append(result)
             else:
-                accepted_party_count = len([c for c in val if c['party'] in ACCEPTED_PARTIES])
-                third_party_slots = TARGET_CANDIDATE_LIST_LENGTH - accepted_party_count
-                for result in val:
-                    if result['party'] in ACCEPTED_PARTIES:
-                        filtered.append(result)
-                    elif third_party_slots > 0:
-                        third_party_slots -= 1
-                        filtered.append(result)
-                    else:
-                        other_votecount += result['votecount']
-                        other_votepct += result['votepct']
-                        if result.get('npr_winner') is True:
-                            other_winner = True
+                other_votecount += result['votecount']
+                other_votepct += result['votepct']
+                if result.get('npr_winner') is True:
+                    other_winner = True
+        # If no votes are present, reorder based on the sort-order
+        # of the override setting
+        if not any_votes_yet:
+            resorted_filtered = []
+            for surname in app_config.CANDIDATE_SET_OVERRIDES[raceid]:
+                for result in filtered:
+                    if result['last'] == surname:
+                        resorted_filtered.append(result)
+                        break
+            filtered = resorted_filtered
+    else:
+        accepted_party_count = len([c for c in results_for_a_race if c['party'] in ACCEPTED_PARTIES])
+        third_party_slots = TARGET_CANDIDATE_LIST_LENGTH - accepted_party_count
+        for result in results_for_a_race:
+            if result['party'] in ACCEPTED_PARTIES:
+                filtered.append(result)
+            elif third_party_slots > 0:
+                third_party_slots -= 1
+                filtered.append(result)
+            else:
+                other_votecount += result['votecount']
+                other_votepct += result['votepct']
+                if result.get('npr_winner') is True:
+                    other_winner = True
 
-            # Don't create an "Other" if no candidates were amalgomated into it
-            if len(val) > len(filtered):
-                filtered.append({
-                    'first': '',
-                    'last': 'Other',
-                    'votecount': other_votecount,
-                    'votepct': other_votepct,
-                    'npr_winner': other_winner
-                })
+    # Don't create an "Other" if no candidates were amalgomated into it
+    if len(results_for_a_race) > len(filtered) and not for_big_boards:
+        filtered.append({
+            'first': '',
+            'last': 'Other',
+            'votecount': other_votecount,
+            'votepct': other_votepct,
+            'npr_winner': other_winner
+        })
 
-            serialized_results['results'][key] = filtered
+    # Big boards should never show "Other"s, and should show no more
+    # than two candidates
+    if for_big_boards:
+        filtered = filtered[:2]
 
-    return serialized_results
+    return filtered
 
 
 def get_last_updated(serialized_results):
