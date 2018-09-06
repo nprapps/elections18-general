@@ -530,7 +530,7 @@ COPY editing
 
 View the [sample copy spreadsheet](https://docs.google.com/spreadsheet/pub?key=1pja8aNw24ZGZTrfO8TSQCfN76gQrj6OhEcs07uz0_C0#gid=0).
 
-This document is specified in ``app_config`` with the variable ``COPY_GOOGLE_DOC_KEY``. To use your own spreadsheet, change this value to reflect your document's key. (The long string of random looking characters in your Google Docs URL. For example: ``1DiE0j6vcCm55Dyj_sV5OJYoNXRRhn_Pjsndba7dVljo``)
+This document is specified in ``app_config`` with the variable ``COPY_GOOGLE_DOC_KEY``. To use your own spreadsheet, change this value to reflect your document's key. (The long string of random looking characters is in your Google Docs URL. For example: ``1DiE0j6vcCm55Dyj_sV5OJYoNXRRhn_Pjsndba7dVljo``)
 
 A few things to note:
 
@@ -541,7 +541,7 @@ A few things to note:
 
 The app template is outfitted with a few ``fab`` utility functions that make pulling changes and updating your local data easy.
 
-To update the latest document, simply run:
+To update the latest document, run:
 
 ```
 fab text.update
@@ -581,6 +581,17 @@ about_url
 download_label
 download_url
 ```
+
+### How to create a new sheet and hook it up
+
+Example: This is how the Get Caught Up chunk was created on the backend and hooked up to the front-end.
+
+1. Create the new tab in the COPY spreadsheet. You'll probably want to do this on your own copy of the COPY spreadsheet, that means you'll have to point to the new spreadsheet in app_config.py, `COPY_GOOGLE_DOC_KEY`
+1. In [fabfile/render.py](fabfile/render.py#L258), create a new method with a `@task` decorator that will load the data and save it to a json file. Make sure to call that method in the `render_all()` method.
+1. Download the latest COPY spreadsheet with `fab text.update`
+1. Run the command you created in step two, in this example it was `fab render.render_get_caught_up`
+1. Run the local docker daemon to copy the new json file to graphics: `docker-compose up daemon`. If that doesn't work you could try `docker-compose up bootstrap_db`
+1. That's the backend portion of hooking up a new tab in the COPY spreadsheet.
 
 Open Linked Google Spreadsheet
 ------------------------------
