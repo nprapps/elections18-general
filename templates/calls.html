@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AP Calls Admin</title>
+<title>NPR Election Calls</title>
 
 {{ CSS.push('less/calls.less') }}
 {{ CSS.render('css/calls.min.css') }}
@@ -11,13 +11,19 @@
     <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
             <div class="navbar-header">
-                <a class="navbar-brand" href="#">AP Calls CMS</a>
+                <span class="navbar-brand" href="#">NPR Election Calls</span>
             </div>
 
             <ul class="nav navbar-nav">
                 {% for office_slug, office_name in offices.items() %}
                     <li class="nav-item">
-                        <a class="navbar-link" href="../{{ office_slug }}">{{ office_name }}</a>
+                        <a class="navbar-link" href="../{{ office_slug }}">
+                            {% if office_name == officename %}
+                                <strong>{{ office_name }}</strong>
+                            {% else %}
+                                {{ office_name }}
+                            {% endif %}
+                        </a>
                     <li>
                 {% endfor %}
             </ul>
@@ -27,11 +33,33 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12">
-            </div>
-        </div>
+                {% if officename in ('U.S. House', 'U.S. Senate') %}
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h3>Chamber control for {{ officename }}</h3>
+                            <p>Use this option to call control of a chamber for one party, before that party has 50%+1 of the seats.</p>
+                            <p>If a party has already won 50%+1 of the seats, this setting will do nothing.</p>
+                            {% if chamber_call_override %}
+                                <button class="btn {% if chamber_call_override == 'Dem' %} btn-primary{% elif chamber_call_override == 'GOP' %}btn-danger{% endif %}">
+                                    Chamber has been overridden for {{ chamber_call_override }}
+                                </button>
+                                <button id="uncall-chamber" type="button" class="btn btn-default">
+                                    Remove chamber call
+                                </button>
+                            {% else %}
+                                <button id="call-chamber-dem" type="button" class="btn btn-primary ">
+                                    Call chamber for Democrats
+                                </button>
+                                <button id="call-chamber-gop" type="button" class="btn btn-danger">
+                                    Call chamber for Republicans
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
 
-        <div class="row">
-            <div class="col-md-12">
+                    <hr>
+                {% endif %}
+
                 {% for id, results in races.items() %}
                 <div class="row">
                     <div class="col-md-8">
@@ -52,7 +80,7 @@
                                 Accepting AP calls
                             </button>
 
-                            <button class="btn btn-warning btn-mini ap reject-ap {% if  results[0].call[0].accept_ap %} hidden {% endif %}" data-race-id="{{ results[0].raceid }}" data-statepostal="{{ results[0].statepostal }}" data-reportingunit="{{ results[0].reportingunitname }}" data-level="{{ results[0].level }}">
+                            <button class="btn btn-warning btn-mini ap reject-ap {% if results[0].call[0].accept_ap %} hidden {% endif %}" data-race-id="{{ results[0].raceid }}" data-statepostal="{{ results[0].statepostal }}" data-reportingunit="{{ results[0].reportingunitname }}" data-level="{{ results[0].level }}">
                                 Not accepting AP Calls
                             </button>
                         </div>

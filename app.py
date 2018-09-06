@@ -37,6 +37,7 @@ app.add_template_filter(urlencode_filter, name='urlencode')
 admin = Admin(app, url='/%s/admin' % app_config.PROJECT_SLUG)
 admin.add_view(ModelView(models.Result))
 admin.add_view(ModelView(models.Call))
+admin.add_view(ModelView(models.RaceMeta))
 
 SLUG_TO_OFFICENAME = {
     'senate': 'U.S. Senate',
@@ -44,21 +45,44 @@ SLUG_TO_OFFICENAME = {
     'governor': 'Governor'
 }
 
-# Example application views
+
 @app.route('/%s/calls/<office>/' % app_config.PROJECT_SLUG, methods=['GET'])
 def calls_admin(office):
     officename = SLUG_TO_OFFICENAME[office]
     results = app_utils.filter_results(officename)
     grouped = app_utils.group_results_by_race(results, officename)
-
+    # This value will be the same for all seats in a chamber
+    chamber_call_override = results.first().meta.first().chamber_call_override
 
     context = make_context(asset_depth=1)
     context.update({
+        'officename': officename,
+        'chamber_call_override': chamber_call_override,
         'offices': SLUG_TO_OFFICENAME,
         'races': grouped
     })
 
     return make_response(render_template('calls.html', **context))
+
+
+@app.route('/%s/calls/<office>/call-chamber' % app_config.PROJECT_SLUG, methods=['POST'])
+def call_chamber(office):
+    '''
+    Set an override for control of a legislative chamber, separate
+    from calling any individual seat
+    '''
+    from flask import request
+
+    # Passing `null` in the `POST`ed data does not register as `None`
+    # in Flask, so cast it as such
+    call = request.form.get('call') or None
+
+    result_ids_for_chamber = models.Result.select(models.Result.id).where(models.Result.officename == SLUG_TO_OFFICENAME[office])
+    update = models.RaceMeta.update(chamber_call_override=call).where(models.RaceMeta.result_id_id << result_ids_for_chamber)
+    update.execute()
+
+    return 'Success', 200
+
 
 @app.route('/%s/calls/<office>/call-npr' % app_config.PROJECT_SLUG, methods=['POST'])
 def call_npr(office):
@@ -100,6 +124,7 @@ def call_npr(office):
         race_call.save()
 
     return 'Success', 200
+
 
 @app.route('/%s/calls/<office>/accept-ap' % app_config.PROJECT_SLUG, methods=['POST'])
 def accept_ap(office):

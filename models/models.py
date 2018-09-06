@@ -126,3 +126,7 @@ class RaceMeta(BaseModel):
     voting_member = BooleanField(default=True)
     key_race = BooleanField(default=False)
     ballot_measure_theme = CharField(null=True)
+    # Store the admin panel's early call of that race's chamber as a whole
+    # This is the least painful place to store this value
+    # See https://github.com/nprapps/elections18-graphics/issues/92
+    chamber_call_override = CharField(null=True, choices=(('Dem', 'Dem'), ('GOP', 'GOP')))

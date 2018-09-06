@@ -205,7 +205,8 @@ def create_race_meta():
         if result.level == 'county' or result.level == 'township':
             continue
 
-        if result.level == 'state' or result.level == 'district':
+        if (result.level == 'state' or result.level == 'district') \
+                and result.statepostal != 'US':
             calendar_row = list(filter(lambda x: x['key'] == result.statepostal, calendar_sheet))[0]
 
             meta_obj['poll_closing'] = calendar_row['time_est']

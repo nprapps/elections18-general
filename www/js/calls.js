@@ -4,9 +4,13 @@ var $callNPR;
 var $uncallNPR;
 var $overlay;
 var $body;
+var $callChamberDem;
+var $callChamberGOP;
+var $uncallChamber;
 
 var ACCEPT_AP_URL = document.location.href + 'accept-ap';
-var CALL_NPR_URL = document.location.href + 'call-npr'
+var CALL_NPR_URL = document.location.href + 'call-npr';
+var CHAMBER_CALL_URL = document.location.href + 'call-chamber';
 
 var pageRefresh = null;
 
@@ -22,6 +26,13 @@ var onDocumentLoad = function() {
     $rejectAP.on('click', onAPClick);
     $callNPR.on('click', onCallNPRClick);
     $uncallNPR.on('click', onUncallNPRClick);
+
+    $callChamberDem = $('#call-chamber-dem');
+    $callChamberGOP = $('#call-chamber-gop');
+    $uncallChamber = $('#uncall-chamber');
+    if ($callChamberDem) { $callChamberDem.on('click', onCallChamberDem); }
+    if ($callChamberGOP) { $callChamberGOP.on('click', onCallChamberGOP); }
+    if ($uncallChamber) { $uncallChamber.on('click', onUncallChamber); }
 
     pageRefresh = setInterval(refreshPage, 10000);
 }
@@ -66,6 +77,19 @@ var onUncallNPRClick = function(e) {
         refreshPage(true);
     });
 }
+
+var callChamber = function(party) {
+    var data = { call: party };
+
+    $overlay.fadeIn();
+    $.post(CHAMBER_CALL_URL, data, function() {
+        refreshPage(true);
+    });
+}
+
+var onUncallChamber = function(e) { callChamber(null); }
+var onCallChamberDem = function(e) { callChamber('Dem'); }
+var onCallChamberGOP = function(e) { callChamber('GOP'); }
 
 var refreshPage = function() {
     $.get(window.location.href, function(data) {
