@@ -4,6 +4,7 @@ var $callNPR;
 var $uncallNPR;
 var $overlay;
 var $body;
+var $allowChamberCall;
 var $callChamberDem;
 var $callChamberGOP;
 var $uncallChamber;
@@ -27,9 +28,11 @@ var onDocumentLoad = function() {
     $callNPR.on('click', onCallNPRClick);
     $uncallNPR.on('click', onUncallNPRClick);
 
+    $allowChamberCall = $('#allow-chamber-call');
     $callChamberDem = $('#call-chamber-dem');
     $callChamberGOP = $('#call-chamber-gop');
     $uncallChamber = $('#uncall-chamber');
+    if ($allowChamberCall) { $allowChamberCall.on('click', onAllowChamberCall); }
     if ($callChamberDem) { $callChamberDem.on('click', onCallChamberDem); }
     if ($callChamberGOP) { $callChamberGOP.on('click', onCallChamberGOP); }
     if ($uncallChamber) { $uncallChamber.on('click', onUncallChamber); }
@@ -76,6 +79,12 @@ var onUncallNPRClick = function(e) {
     $.post(CALL_NPR_URL, data, function() {
         refreshPage(true);
     });
+}
+
+var onAllowChamberCall = function(e) {
+    $allowChamberCall.addClass('hidden');
+    $callChamberDem.removeClass('hidden');
+    $callChamberGOP.removeClass('hidden');
 }
 
 var callChamber = function(party) {
