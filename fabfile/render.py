@@ -402,7 +402,7 @@ def _serialize_for_big_board(results, selections, key='raceid', bucket_key='poll
         else:
             dict_key = result_dict[key]
 
-        bucket_value = getattr(result.meta[0], bucket_key)
+        bucket_value = getattr(result.meta.first(), bucket_key)
         if not serialized_results['results'].get(bucket_value):
             serialized_results['results'][bucket_value] = {}
 
@@ -475,7 +475,7 @@ def _calculate_bop(result, bop):
 
     if result.is_pickup():
         bop[party]['pickups'] += 1
-        bop[result.meta[0].current_party]['pickups'] -= 1
+        bop[result.meta.first().current_party]['pickups'] -= 1
 
     if not bop['last_updated'] or result.lastupdated > bop['last_updated']:
         bop['last_updated'] = result.lastupdated
