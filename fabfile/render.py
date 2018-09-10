@@ -165,67 +165,64 @@ def render_top_level_numbers():
     # running its 2018 tests in October
     # senate_bop = {
     #     'total_seats': 100,
-    #     'majority': 51,
     #     'uncalled_races': 35,
     #     'last_updated': None,
+    #     'npr_winner': None,
     #     'Dem': {
     #         'seats': 23,
-    #         'pickups': 0,
-    #         'needed': 28
+    #         'pickups': 0
     #     },
     #     'GOP': {
     #         'seats': 42,
-    #         'pickups': 0,
-    #         'needed': 8
+    #         'pickups': 0
     #     },
     #     'Other': {
     #         'seats': 0,
-    #         'pickups': 0,
-    #         'needed': 51
+    #         'pickups': 0
     #     }
     # }
 
+    # Set which party controls the vice presidency, who determines
+    # ties in Senate votes
+    SENATE_TIE_GOES_TO = 'GOP'
+    # For determining chamber control, dictate which party the
+    # independents/others caucus with
+    SENATE_THIRD_PARTIES_COUNT_TOWARDS = 'Dem'
     senate_bop = {
         'total_seats': 100,
-        'majority': 51,
         'uncalled_races': 34,
         'last_updated': None,
+        'npr_winner': None,
         'Dem': {
             'seats': 34,
-            'pickups': 0,
-            'needed': 17
+            'pickups': 0
         },
         'GOP': {
             'seats': 30,
-            'pickups': 0,
-            'needed': 21
+            'pickups': 0
         },
         'Other': {
             'seats': 2,
-            'pickups': 0,
-            'needed': 49
+            'pickups': 0
         }
     }
 
     house_bop = {
         'total_seats': 435,
-        'majority': 218,
         'uncalled_races': 435,
         'last_updated': None,
+        'npr_winner': None,
         'Dem': {
             'seats': 0,
-            'pickups': 0,
-            'needed': 218
+            'pickups': 0
         },
         'GOP': {
             'seats': 0,
-            'pickups': 0,
-            'needed': 218
+            'pickups': 0
         },
         'Other': {
             'seats': 0,
-            'pickups': 0,
-            'needed': 218
+            'pickups': 0
         }
     }
 
@@ -234,16 +231,30 @@ def render_top_level_numbers():
 
     for result in senate_results:
         _calculate_bop(result, senate_bop)
+    _calculate_chamber_control(
+        senate_bop,
+        tie_goes_to=SENATE_TIE_GOES_TO,
+        third_parties_count_towards=SENATE_THIRD_PARTIES_COUNT_TOWARDS,
+        override=senate_results.first().meta.first().chamber_call_override
+    )
 
     for result in house_results:
         _calculate_bop(result, house_bop)
+    _calculate_chamber_control(
+        house_bop,
+        override=house_results.first().meta.first().chamber_call_override
+    )
 
-    if senate_bop['last_updated'] > house_bop['last_updated'] or senate_bop['last_updated'] == house_bop['last_updated']:
-        last_updated = senate_bop['last_updated']
-    elif senate_bop['last_updated'] > house_bop['last_updated']:
-        last_updated = house_bop['last_updated']
+    last_updated = None
+    if senate_bop['last_updated'] and house_bop['last_updated']:
+        last_updated = max(
+            senate_bop['last_updated'],
+            house_bop['last_updated']
+        )
     else:
-        last_updated = datetime.utcnow()
+        last_updated = senate_bop['last_updated'] or \
+            house_bop['last_updated'] or \
+            datetime.utcnow()
 
     data = {
         'senate_bop': senate_bop,
@@ -460,7 +471,6 @@ def _calculate_bop(result, bop):
     party = result.party if result.party in ACCEPTED_PARTIES else 'Other'
     if result.is_npr_winner():
         bop[party]['seats'] += 1
-        bop[party]['needed'] -= 1
         bop['uncalled_races'] -= 1
 
     if result.is_pickup():
@@ -469,6 +479,30 @@ def _calculate_bop(result, bop):
 
     if not bop['last_updated'] or result.lastupdated > bop['last_updated']:
         bop['last_updated'] = result.lastupdated
+
+
+def _calculate_chamber_control(bop, tie_goes_to=None, third_parties_count_towards=None, override=None):
+    '''
+    Determine which party is in control of the chamber
+    '''
+    dem_count = bop['Dem']['seats'] + (bop['Other']['seats'] if third_parties_count_towards == 'Dem' else 0)
+    gop_count = bop['GOP']['seats'] + (bop['Other']['seats'] if third_parties_count_towards == 'GOP' else 0)
+
+    leading_party = None
+    if dem_count == gop_count:
+        leading_party = tie_goes_to
+    elif dem_count > gop_count:
+        leading_party = 'Dem'
+    else:
+        leading_party = 'GOP'
+
+    half_of_seats = bop['total_seats'] / 2.
+    if leading_party and bop[leading_party]['seats'] >= half_of_seats:
+        bop['npr_winner'] = leading_party
+
+    # Only use the override if no party is yet in control normally
+    if not bop['npr_winner'] and override:
+        bop['npr_winner'] = override
 
 
 def collate_other_candidates(results_for_a_race, for_big_boards=False):
