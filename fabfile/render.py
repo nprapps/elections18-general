@@ -261,6 +261,8 @@ def render_get_caught_up():
     copy = copytext.Copy(app_config.CALENDAR_PATH)
     sheet = copy['get_caught_up']
     serialized_data = json.loads(sheet.json())
+    if serialized_data.published and serialized_data.published.lower() != 'yes':
+        return False
     filename = 'get-caught-up.json'
     _write_json_file(serialized_data, filename)
 
