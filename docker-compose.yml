@@ -50,6 +50,9 @@ services:
       # - AP_API_BASE_URL=http://fakeapserver:8002/elections/2016/ap-deja-vu
       - elections18_POSTGRES_HOST=database
       - AP_API_KEY
+      # Allow Google OAuth cookie to be refreshed
+      - GOOGLE_OAUTH_CLIENT_ID
+      - GOOGLE_OAUTH_CONSUMER_SECRET
 
   app:
     depends_on:
