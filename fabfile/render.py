@@ -285,10 +285,9 @@ def render_get_caught_up():
             is_valid = False
 
     # Validate links in all of the fields that contain
-    if 'published' in serialized_data and serialized_data.published.lower() != 'yes' or is_valid == False:
-        return False
-    filename = 'get-caught-up.json'
-    _write_json_file(serialized_data, filename)
+    if 'published' in serialized_data and serialized_data.published.lower() == 'yes' and is_valid == True:
+        filename = 'get-caught-up.json'
+        _write_json_file(serialized_data, filename)
 
 
 @task
