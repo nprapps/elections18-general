@@ -268,8 +268,10 @@ def render_top_level_numbers():
 
 @task
 def render_get_caught_up():
-    # Render the prose for the get-caught-up info box
-    # The Google Sheet that powers this will be regularly re-downloaded
+    '''
+    Render the prose for the get-caught-up info box
+    The Google Sheet that powers this will be regularly re-downloaded
+    '''
     copy = copytext.Copy(app_config.CALENDAR_PATH)
     sheet = copy['get_caught_up']
     serialized_data = json.loads(sheet.json())
@@ -281,13 +283,22 @@ def render_get_caught_up():
     # did not address this seeming discrepancy.
     for field in markup_fields:
         document, errors = tidy_fragment('<!DOCTYPE html><html><head><title>test</title></head><body>%s</body></html>' % serialized_data[field])
-        if len(errors) > 0:
+        if errors:
             is_valid = False
+            break
 
-    # Validate links in all of the fields that contain
-    if 'published' in serialized_data and serialized_data.published.lower() == 'yes' and is_valid == True:
-        filename = 'get-caught-up.json'
-        _write_json_file(serialized_data, filename)
+    # Don't publish if that option is off, or if a syntax error is found
+    if serialized_data.get('published', '').lower() == 'yes' and is_valid:
+        meta = {
+            'published': serialized_data['published'],
+            'last_updated': datetime.utcnow()
+        }
+        content = {k: v.strip() for k, v in serialized_data.items() if k in markup_fields}
+
+        _write_json_file(
+            {'meta': meta, 'content': content},
+            'get-caught-up.json'
+        )
 
 
 @task
