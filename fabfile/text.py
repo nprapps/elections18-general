@@ -5,7 +5,7 @@ Commands related to syncing docs and spreadsheets from Google Drive.
 
 import app_config
 
-from fabric.api import task
+from fabric.api import parallel, task
 from oauth import get_document
 
 
@@ -15,6 +15,15 @@ def update():
     Update all Drive content.
     """
     update_copytext()
+    update_calendar()
+
+
+@task
+@parallel
+def update_in_parallel():
+    '''
+    Update the tabular data in the background
+    '''
     update_calendar()
 
 

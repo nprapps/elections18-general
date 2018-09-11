@@ -36,6 +36,8 @@ def main(run_once=False):
 
         if app_config.LOAD_RESULTS_INTERVAL and (now - results_start) > app_config.LOAD_RESULTS_INTERVAL:
             results_start = now
+            logger.info('updating get-caught-up text (runs in parallel)')
+            execute('text.update_in_parallel')
             logger.info('loading results')
             execute('data.load_results')
             logger.info("results loaded: %s seconds" % (time() - results_start))

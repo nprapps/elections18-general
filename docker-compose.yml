@@ -43,6 +43,8 @@ services:
       - .:/opt/elections18
       # This allows rendered data to be shared with the front-end repo
       - ../elections18-graphics:/opt/elections18-graphics
+      # Share your local Google OAuth cookie, to allow Google Sheet access
+      - ~/.google_oauth_credentials:/root/.google_oauth_credentials
     environment:
       # Comment out the `AP_API_BASE_URL` line to use the actual AP server
       # - AP_API_BASE_URL=http://fakeapserver:8002/elections/2016/ap-deja-vu
