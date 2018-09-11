@@ -12,6 +12,7 @@ from fabric.api import task
 from joblib import Parallel, delayed
 from models import models
 from playhouse.shortcuts import model_to_dict
+from tidylib import tidy_fragment
 
 from . import utils
 
@@ -272,7 +273,16 @@ def render_get_caught_up():
     copy = copytext.Copy(app_config.CALENDAR_PATH)
     sheet = copy['get_caught_up']
     serialized_data = json.loads(sheet.json())
-    if 'published' in serialized_data and serialized_data.published.lower() != 'yes':
+
+    is_valid = True
+    markup_fields = ['intro_1', 'intro_2', 'bullet_1', 'bullet_2', 'bullet_3', 'bullet_4', 'bullet_5']
+    for field in markup_fields:
+        document, errors = tidy_fragment('<!DOCTYPE html><html><head><title>test</title></head><body>%s</body></html>' % serialized_data[field])
+        if len(errors) > 0:
+            is_valid = False
+
+    # Validate links in all of the fields that contain
+    if 'published' in serialized_data and serialized_data.published.lower() != 'yes' or is_valid == False:
         return False
     filename = 'get-caught-up.json'
     _write_json_file(serialized_data, filename)
