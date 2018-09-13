@@ -56,21 +56,21 @@ What's in here?
 
 The project contains the following folders and important files:
 
-* ``confs`` -- Server configuration files for nginx and uwsgi. Edit the templates then ``fab <ENV> servers.render_confs``, don't edit anything in ``confs/rendered`` directly.
-* ``data`` -- Data files, such as those used to generate HTML.
-* ``fabfile`` -- [Fabric](http://docs.fabfile.org/en/latest/) commands for automating setup, deployment, data processing, etc.
-* ``etc`` -- Miscellaneous scripts and metadata for project bootstrapping.
-* ``less`` -- [LESS](http://lesscss.org/) files, will be compiled to CSS and concatenated for deployment.
-* ``templates`` -- HTML ([Jinja2](http://jinja.pocoo.org/docs/)) templates, to be compiled locally.
-* ``tests`` -- Python unit tests.
-* ``www`` -- Static and compiled assets to be deployed. (a.k.a. "the output")
-* ``www/assets`` -- A symlink to an S3 bucket containing binary assets (images, audio).
-* ``www/live-data`` -- "Live" data deployed to S3 via cron jobs or other mechanisms. (Not deployed with the rest of the project.)
-* ``www/test`` -- Javascript tests and supporting files.
-* ``app.py`` -- A [Flask](http://flask.pocoo.org/) app for rendering the project locally.
-* ``app_config.py`` -- Global project configuration for scripts, deployment, etc.
-* ``render_utils.py`` -- Code supporting template rendering.
-* ``requirements.txt`` -- Python requirements.
+* [``confs``](confs) -- Server configuration files for nginx and uwsgi. Edit the templates then ``fab <ENV> servers.render_confs``, don't edit anything in ``confs/rendered`` directly.
+* [``data``](data) -- Data files, such as those used to generate HTML.
+* [``fabfile``](fabfile) -- [Fabric](http://docs.fabfile.org/en/latest/) commands for automating setup, deployment, data processing, etc.
+* [``etc``](etc) -- Miscellaneous scripts and metadata for project bootstrapping.
+* [``less``](less) -- [LESS](http://lesscss.org/) files, will be compiled to CSS and concatenated for deployment.
+* [``templates``](templates) -- HTML ([Jinja2](http://jinja.pocoo.org/docs/)) templates, to be compiled locally.
+* [``tests``](tests) -- Python unit tests.
+* [``www``](www) -- Static and compiled assets to be deployed. (a.k.a. "the output")
+* [``www/assets``](www/assets) -- A symlink to an S3 bucket containing binary assets (images, audio).
+* [``www/live-data``](www/live-data)  -- "Live" data deployed to S3 via cron jobs or other mechanisms. (Not deployed with the rest of the project.)
+* [``www/test``](www/test) -- Javascript tests and supporting files.
+* [``app.py``](app.py) -- A [Flask](http://flask.pocoo.org/) app for rendering the project locally.
+* [``app_config.py``](app_config.py) -- Global project configuration for scripts, deployment, etc.
+* [``render_utils.py``](render_utils.py) -- Code supporting template rendering.
+* [``requirements.txt``](requirements.txt) -- Python requirements.
 
 Bootstrap the project
 ---------------------
@@ -591,7 +591,8 @@ Example: This is how the Get Caught Up chunk was created on the backend and hook
 1. Download the latest COPY spreadsheet with `fab text.update`
 1. Run the command you created in step two, in this example it was `fab render.render_get_caught_up`
 1. Run the local docker daemon to copy the new json file to graphics: `docker-compose up daemon`. If that doesn't work you could try `docker-compose up bootstrap_db`
-1. That's the backend portion of hooking up a new tab in the COPY spreadsheet.
+
+That's the backend portion of hooking up a new tab in the COPY spreadsheet.
 
 Open Linked Google Spreadsheet
 ------------------------------
