@@ -100,14 +100,28 @@ class Result(BaseModel):
 
     @hybrid_property
     def is_special_election(self):
-        return 'special' in self.racetype.lower()
+        special_in_name = 'special' in self.racetype.lower()
+        # From Tracy at the Associated Press, regarding 2018 special elections:
+        # For the two 2018 US Senate races (officeid=S) in question),
+        # in MN and MS, the racetype will NOT be Special General as we
+        # do need to set the national flag/needs to be figured into
+        # the national trend table, but there will be differentiated
+        # by a seatname which depicts the starting year of the term
+        # (seatname will be 2014 for both races). The “regular” MN and
+        # MS US Senate races will not have a seatname.
+        is_senate_special = self.officename == 'U.S. Senate' and bool(self.seatname)
+
+        return special_in_name or is_senate_special
 
     # This is used when the property is called on the class, not an instance
     # In these cases, the `peewee` SQL query logic is different from Python's
     # http://docs.peewee-orm.com/en/latest/peewee/playhouse.html#hybrid
     @is_special_election.expression
     def is_special_election(cls):
-        return fn.Lower(cls.racetype).contains('special')
+        special_in_name = fn.Lower(cls.racetype).contains('special')
+        is_senate_special = cls.officename == 'U.S. Senate' and bool(cls.seatname)
+
+        return special_in_name or is_senate_special
 
 
 class Call(BaseModel):

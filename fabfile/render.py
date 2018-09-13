@@ -51,7 +51,10 @@ HOUSE_SELECTIONS = COMMON_SELECTIONS + [
 SENATE_SELECTIONS = COMMON_SELECTIONS + [
     models.Result.incumbent,
     models.Result.runoff,
-    models.Result.meta
+    models.Result.meta,
+    # `peewee` chokes when using `model_to_dict` with hybrid expressions,
+    # so address this selection as a string instead
+    'is_special_election'
 ]
 
 GOVERNOR_SELECTIONS = COMMON_SELECTIONS + [
@@ -140,6 +143,8 @@ def _select_all_house_results():
 
 
 def _select_senate_results():
+    # These results are only used for BoP calculation and big board,
+    # so they don't need to take `is_special_election` into account
     results = models.Result.select().where(
         models.Result.level == 'state',
         models.Result.officename == 'U.S. Senate'
@@ -302,21 +307,31 @@ def render_get_caught_up():
 
 
 @task
-def render_county_results(office):
+def render_county_results(office, special=False):
     states = models.Result.select(models.Result.statepostal).distinct()
 
-    Parallel(n_jobs=NUM_CORES)(delayed(_render_county)(state.statepostal, office) for state in states)
+    # `joblib.Parallel` was choking on the `special` argument, for
+    # some reason. Could not expediently debug, so switching back to
+    # serial processing for the counties.
+    for state in states:
+        _render_county(state.statepostal, office, special=special)
 
 
-def _render_county(statepostal, office):
-    results = _select_county_results(statepostal, office)
+def _render_county(statepostal, office, special=False):
+    # `peewee` is having trouble using hybrid properties in its
+    # result filtering with a passed parameter (`special`), so
+    # for now we'll perform a Pythonic filtering to apply the
+    # `special` argument
+    unfiltered_results = _select_county_results(statepostal, office)
+    results = [result for result in unfiltered_results if result.is_special_election == special]
     serialized_results = _serialize_by_key(results, COUNTY_SELECTIONS, 'fipscode', collate_other=True)
 
     # No need to render if the state doesn't have that type of race
     if serialized_results['results']:
-        filename = '{0}-counties-{1}.json'.format(
+        filename = '{0}-counties-{1}{2}.json'.format(
             statepostal.lower(),
-            office
+            office,
+            '-special' if special else ''
         )
         _write_json_file(serialized_results, filename)
 
@@ -362,6 +377,7 @@ def render_state_results():
 
 def _render_state(statepostal):
     with models.db.execution_context() as ctx:
+        # This will include both regular and special Senate elections
         senate = models.Result.select().where(
             models.Result.level == 'state',
             models.Result.officename == 'U.S. Senate',
@@ -406,13 +422,29 @@ uncallable_levels = ['county', 'township']
 pickup_offices = ['U.S. House', 'U.S. Senate']
 
 
+def categorize_selections(selections):
+    # `peewee` chokes when using `model_to_dict` with hybrid expressions,
+    # so these selections should be passed as a string instead
+    regular_selections = []
+    hybrid_selections = []
+    for selection in selections:
+        if type(selection) == str:
+            hybrid_selections.append(selection)
+        else:
+            regular_selections.append(selection)
+    return regular_selections, hybrid_selections
+
+
 def _serialize_for_big_board(results, selections, key='raceid', bucket_key='poll_closing'):
     serialized_results = {
         'results': {}
     }
 
+    regular_selections, hybrid_selections = categorize_selections(selections)
+
     for result in results:
-        result_dict = model_to_dict(result, backrefs=True, only=selections)
+        result_dict = model_to_dict(result, backrefs=True, only=regular_selections, extra_attrs=hybrid_selections)
+
         if result.level not in uncallable_levels:
             _set_meta(result, result_dict)
             if result.officename in pickup_offices:
@@ -454,8 +486,10 @@ def _serialize_by_key(results, selections, key, collate_other=False):
             'results': {}
         }
 
+        regular_selections, hybrid_selections = categorize_selections(selections)
+
         for result in results:
-            result_dict = model_to_dict(result, backrefs=True, only=selections)
+            result_dict = model_to_dict(result, backrefs=True, only=regular_selections, extra_attrs=hybrid_selections)
 
             if result.level not in uncallable_levels:
                 _set_meta(result, result_dict)
@@ -676,4 +710,5 @@ def render_all():
 
     render_state_results()
     render_county_results('senate')
+    render_county_results('senate', special=True)
     render_county_results('governor')
