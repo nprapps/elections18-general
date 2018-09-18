@@ -25,6 +25,7 @@ NUM_CORES = multiprocessing.cpu_count() * 4
 COMMON_SELECTIONS = [
     models.Result.first,
     models.Result.last,
+    models.Result.candidateid,
     models.Result.lastupdated,
     models.Result.level,
     models.Result.officename,
@@ -88,6 +89,10 @@ RACE_META_SELECTIONS = [
 ]
 
 ACCEPTED_PARTIES = ['Dem', 'GOP', 'Yes', 'No']
+# Number of candidates ideally in each statewide and county table
+# This can be overridden by specifying exactly which candidates are
+# desired, in `app_config`
+TARGET_CANDIDATE_LIST_LENGTH = 2
 
 SELECTIONS_LOOKUP = {
     'governor': GOVERNOR_SELECTIONS,
@@ -510,8 +515,21 @@ def _serialize_by_key(results, selections, key, collate_other=False):
         serialized_results['last_updated'] = get_last_updated(serialized_results)
 
         if collate_other:
+            # Make sure that all county-table rows have the same set of
+            # candidates, as determined by the top candidates in the state
+            state_level_candidateids = None
+            if key == 'fipscode' and serialized_results['results']:
+                state_results = serialized_results['results']['state']
+                state_level_candidateids = [
+                    c['candidateid'] for c in
+                    collate_other_candidates(state_results)
+                    if c['last'] != 'Other'
+                ]
             for race_key, results_for_a_race in serialized_results['results'].items():
-                serialized_results['results'][race_key] = collate_other_candidates(results_for_a_race)
+                serialized_results['results'][race_key] = collate_other_candidates(
+                    results_for_a_race,
+                    candidates_override=state_level_candidateids
+                )
 
         return serialized_results
 
@@ -564,7 +582,7 @@ def _calculate_chamber_control(bop, tie_goes_to=None, third_parties_count_toward
         bop['npr_winner'] = override
 
 
-def collate_other_candidates(results_for_a_race, for_big_boards=False):
+def collate_other_candidates(results_for_a_race, for_big_boards=False, candidates_override=None):
     # Create an "Other" candidate, to simplify front-end visuals,
     # and minimize filesize of JSON dumps. This may be overridden
     # by `app_config.CANDIDATE_SET_OVERRIDES` if we want to explicitly
@@ -592,12 +610,20 @@ def collate_other_candidates(results_for_a_race, for_big_boards=False):
     # - R -> R
     # - I -> I
 
+    # "Jungle primary" races, such as in Louisiana or California:
+    # - D,R,R,D,I -> D,R,Oth
+    # - D,I,R,D,I -> D,I,Oth
+    # - R,R,R,R,D -> R,R,Oth
+
     # This won't happen for a top-of-ticket seat, but it's handled:
     # - I,I,I -> I,I,Oth
     # - I,I -> I,I
 
-    TARGET_CANDIDATE_LIST_LENGTH = 2
-    races_to_override = app_config.CANDIDATE_SET_OVERRIDES.keys()
+    BIG_BOARD_CANDIDATE_LIST_LENGTH = 2
+
+    # Must check this, since `key` isn't always the `raceid`
+    raceid = results_for_a_race[0]['raceid']
+    candidates_override = app_config.CANDIDATE_SET_OVERRIDES.get(raceid, candidates_override)
 
     # Make sure that more prominent third-party candidates come first
     # But only order by votes if there are any votes in so far
@@ -610,13 +636,9 @@ def collate_other_candidates(results_for_a_race, for_big_boards=False):
     other_winner = False
     filtered = []
 
-    # Need to compare against `val[0].raceid` instead of `key`,
-    # since sometimes `key` can be a county FIPS code rather
-    # than the `raceid` value itself
-    raceid = results_for_a_race[0]['raceid']
-    if raceid in races_to_override:
+    if candidates_override:
         for result in results_for_a_race:
-            if result['last'] in app_config.CANDIDATE_SET_OVERRIDES[raceid]:
+            if result['candidateid'] in candidates_override:
                 filtered.append(result)
             else:
                 other_votecount += result['votecount']
@@ -627,20 +649,22 @@ def collate_other_candidates(results_for_a_race, for_big_boards=False):
         # of the override setting
         if not any_votes_yet:
             resorted_filtered = []
-            for surname in app_config.CANDIDATE_SET_OVERRIDES[raceid]:
+            for candidateid in app_config.CANDIDATE_SET_OVERRIDES[raceid]:
                 for result in filtered:
-                    if result['last'] == surname:
+                    if result['candidateid'] == candidateid:
                         resorted_filtered.append(result)
                         break
             filtered = resorted_filtered
     else:
-        accepted_party_count = len([c for c in results_for_a_race if c['party'] in ACCEPTED_PARTIES])
-        third_party_slots = TARGET_CANDIDATE_LIST_LENGTH - accepted_party_count
         for result in results_for_a_race:
-            if result['party'] in ACCEPTED_PARTIES:
-                filtered.append(result)
-            elif third_party_slots > 0:
-                third_party_slots -= 1
+            # This logic properly handles "jungle primaries" that have
+            # many main-party candidates, as well as when there is only
+            # one major-party candidate in the race.
+            # Importantly, it assumes that the candidates are ordered in
+            # descending vote-count order, which the AP _does_ do,
+            # but make sure that this sorting isn't violated elsewhere
+            # in the stack.
+            if len(filtered) < TARGET_CANDIDATE_LIST_LENGTH:
                 filtered.append(result)
             else:
                 other_votecount += result['votecount']
@@ -661,7 +685,7 @@ def collate_other_candidates(results_for_a_race, for_big_boards=False):
     # Big boards should never show "Other"s, and should show no more
     # than two candidates
     if for_big_boards:
-        filtered = filtered[:2]
+        filtered = filtered[:BIG_BOARD_CANDIDATE_LIST_LENGTH]
 
     return filtered
 

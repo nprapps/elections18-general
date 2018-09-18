@@ -286,9 +286,11 @@ API key used by [`elex`](http://elex.readthedocs.io/) to authenticate to the Ass
 
 Type: Environment variable
 
-### ELEX\_FLAGS
+### ELEX\_FLAG\_SETS
 
 Command line flags for the `elex` command. See the [elex cli documentation](http://elex.readthedocs.io/en/stable/cli.html) for available flags.
+
+This supports multiple different `elex` calls; for example, one may want to make a `reportingunit`-level call for presidential results, but a `state`-level call for the result of all other race types.
 
 Type: `app\_config` variable
 
@@ -302,7 +304,7 @@ Type: `app\_config` variable
 
 Example: `'--states AL'`
 
-### ELEX\_RESET\_FLAGS
+### ELEX\_INIT\_FLAG\_SETS
 
 Command line flags for the `elex` command used to force zeroed-out results with `fab data.load\_results:mode=zeroes` . See the [elex cli documentation](http://elex.readthedocs.io/en/stable/cli.html) for more information.
 
@@ -318,6 +320,27 @@ Type: `app\_config` variable
 
 Example: `10`
 
+### CANDIDATE\_SET\_OVERRIDES
+
+Our system typically only includes the Democrat and Republican (or just the top/main two candidates) in the JSON files that get rendered.
+
+Sometimes, we'll want to explicitly include a third-party candidate, or include three or more candidates. Use this option to do so. If no votes are in yet, we'll maintain the candidate order provided. If any votes are in, allow this set of candidates to be reordered by the system.
+
+We're using AP `candidateid` to identify, which is unique at the race level. Structure is `{ 'AP RACE ID 1': [ 'AP CANDIDATEID 1', 'AP CANDIDATEID 2', ... ], ... }`
+
+Type: `app\_config` variable
+
+Example:
+
+```python
+{
+    # New York's 22nd House seat: Tenney, Myers, and Babinec
+    '36602': ['79331', '79334', '79335'],
+    # Alaska Senate seat: Murkowski, Miller, and Stock
+    '2933': ['6021', '6650', '6647']
+}
+```
+
 ### DATA\_OUTPUT\_FOLDER
 
 Path to folder where results JSON is rendered before being uploaded to S3.
@@ -325,35 +348,6 @@ Path to folder where results JSON is rendered before being uploaded to S3.
 Type: `app\_config` variable
 
 Example: `'.rendered'`
-
-### RESULTS
-
-Iterable of configurations to retrieve results from the database and render as JSON.
-
-Each item of the iterable should be a dictionary with the following keys:
-
-* `filename`: String containing the filename of the rendered JSON file.
-* `query`: String containing the dotted path, relative to the root of the project, to a function that returns an iterable of `Result` model instances that will renderd to JSON. ORM query logic to filter results from the database should go inside that function.
-* `transform`: String containing the dotted path, relative to the root of the project, to a function that takes an iterable of `Result` model instances and returns a JSON-serializeable object representing the collection of results. This is where you can add fields not computed through the ORM, or re-shape the wrapping object for the results list.
-
-Type: `app\_config` variable
-
-Example:
-
-```
-RESULTS = (
-    {
-        # Output filename
-        'filename': 'alabama-results.json',
-        # A function that returns a set of Peewee models that will be baked
-        'query': 'fabfile.query.select_senate_results',
-        # A function that takes the Peewee models and returns a JSON serializeable
-        # dictionary or list with the results in the desired shape, with the desired
-        # fields
-        'transform': 'fabfile.transform.serialize_results'
-    },
-)
-```
 
 Save media assets
 -----------------

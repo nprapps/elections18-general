@@ -147,7 +147,7 @@ LOG_FORMAT = '%(levelname)s:%(name)s:%(asctime)s: %(message)s'
 
 
 """
-elex config
+elex config; see the `Configuration` section of `README.md`
 """
 NEXT_ELECTION_DATE = '2016-11-08'
 # We need to make a single call in order to be compatible with our
@@ -164,20 +164,11 @@ ELEX_FTP_FLAGS = ''
 LOAD_RESULTS_INTERVAL = 12
 DATA_OUTPUT_FOLDER = '.rendered'
 
-# Our system typically only includes the Democrat and Republican
-# (or just the top/main two candidates) in the JSON files that get rendered.
-# Sometimes, we'll want to explicitly include a third-party candidate,
-# or include three or more candidates. Use this option to do so.
-# If no votes are in yet, we'll maintain the candidate orde provided.
-# If any votes are in, allow the candidates to be reordered by the system.
-# Surnames aren't the best identifiers here, but we're using them as such
-# in the front-end tables, so they should suffice in this case.
-# Structure: { 'AP RACE ID': [ 'Last Name 1', 'Last Name 2', ... ] }
 CANDIDATE_SET_OVERRIDES = {
-    # New York's 22nd House seat
-    '36602': ['Tenney', 'Myers', 'Babinec'],
-    # Alaska Senate seat
-    '2933': ['Murkowski', 'Miller', 'Stock']
+    # New York's 22nd House seat: Tenney, Myers, and Babinec
+    '36602': ['79331', '79334', '79335'],
+    # Alaska Senate seat: Murkowski, Miller, and Stock
+    '2933': ['6021', '6650', '6647']
 }
 
 """
