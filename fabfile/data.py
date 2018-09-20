@@ -516,6 +516,10 @@ def extract_margin_data(fipscode, filename):
 def extract_unemployment_data(fipscode, filename):
     """
     Called by save_old_data()
+    The unemployment.csv data is pulled from https://www.bls.gov/lau/#tables, which is a long page full of links.
+    Look for COUNTY DATA --> TABLES --> Labor force data by county 
+    Take the latest txt file (this is the one we used in 2018: https://www.bls.gov/lau/laucnty17.txt)
+    and turn it into a CSV that looks like data/unemployment.csv in this repo.
     """
     with open(filename) as f:
         reader = csv.DictReader(f)
