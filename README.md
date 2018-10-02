@@ -4,7 +4,6 @@ elections18-general
 * [What is this?](#what-is-this)
 * [Assumptions and Requirements](#assumptions-and-requirements)
 * [What's in here?](#whats-in-here)
-* [Bootstrap the project](#bootstrap-the-project)
 * [Data flow](#data-flow)
 * [Output JSON](#output-json)
 * [Configuration](#configuration)
@@ -71,17 +70,6 @@ The project contains the following folders and important files:
 * [``app_config.py``](app_config.py) -- Global project configuration for scripts, deployment, etc.
 * [``render_utils.py``](render_utils.py) -- Code supporting template rendering.
 * [``requirements.txt``](requirements.txt) -- Python requirements.
-
-Bootstrap the project
----------------------
-
-```
-git clone git@github.com:nprapps/elections18-general.git
-cd elections18-general
-mkvirtualenv --python="$(which python3)" elections18-general
-pip install -r requirements.txt
-npm install
-```
 
 Data flow
 ---------
@@ -434,15 +422,26 @@ Once we have setup our servers we will need to install the webservices to suppor
 Run the project
 ---------------
 
-### Local development server
+### Local development server, with Docker Compose
 
-A flask app is used to run the project locally. It will automatically recompile templates and assets on demand.
+Since there are multiple components and processes, it's easiest to coordinate and containerize all of them using Docker Compose. Make sure that you have [Docker](https://docs.docker.com/install/) installed on your computer.
 
-```
-fab app
-```
+Select environment variables (dictated in `docker-compose.yml`) will be shared with the Docker containers. Updates to the code on your local machine will be reflected in the containers (since their file systems share the repo directory from your local machine). Similar to how you'd need to stop and start most processes on your local machine, you may need to stop (`docker-compose stop ${SERVICE_NAME}`) and restart (`docker-compose up ${SERVICE_NAME}`) to get the updated code to run. If you change the `Dockerfile`s, `requirements.txt`, or `package.json` files containing the operating systems, libraries, and binaries installed on the Docker containers, you will need to run `docker-compose build ${SERVICE_NAME}` in order to update that Docker container.
 
-Visit [localhost:8000](http://localhost:8000) in your browser.
+- To bring up the database server, run `docker-compose up database`
+  - Leaving this terminal shell up will let you view database logs as they happen
+  - We use port `5433` instead of the Postgres-default `5432` so that the Docker container's open port doesn't conflict with any local Postgres instances you have on your machine
+  - You should be able to use a local Postgres client to connect to this container, using `psql postgres://elections18:elections18@localhost:5433/elections18`
+- To initialize your database's schema and insert some test data, run `docker-compose up bootstrap_db"
+  - This will pull the most recent data from the AP API
+- To run the daemon, to continuously poll the AP API and publish the most recent JSON files, run `docker-compose up daemon`
+  - JSON files will be published to the `GRAPHICS_DATA_OUTPUT_FOLDER`, set in `app_config.py`
+- To bring up the admin interface, run `docker-compose up app`
+  - You can connect to this service at `localhost:8001`; eg, `http://localhost:8001/elections18/calls/senate/`
+- Separately, and not required, there is also a `fakeapserver` Docker Compose service that can mock constantly-updating AP data using [AP Deja-Vu](https://github.com/newsdev/ap-deja-vu). Per the comments in `docker-compose.yml`, you can run this service (`docker-compose up fakeapserver`), connect to its admin panel on `http://localhost:8002/elections/${YEAR_OF_ELECTION}/ap-deja-vu/`, and then point the `daemon` service at this fake AP API endpoint.
+
+(Again, all of the above could be executed on your local machine, but it's much simpler to handle the varied OS+binary+library environments within containers, and also makes for quicker local setup.)
+
 
 ### Results loader daemon
 
