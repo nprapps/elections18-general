@@ -403,6 +403,8 @@ _Note: NPR users can use our AMI that already contains this configuration, `pyth
 
 _Make sure to store the password, hostname, and other credentials in environment variables in `workinprivate`._
 
+At the end of this provisioning process, you should be able to `psql` into the RDS instance and `ssh` into the EC2 instance while within the NPR DC office WiFi. When on any other network, these connections should fail. Furthermore, you should be able to `psql` into the RDS instance _from within_ the EC2 instance.
+
 Deployment
 ----------
 
@@ -412,9 +414,10 @@ This app can be deployed to EC2 using Fabric in a manner to other NPR apps that 
 
 * In ``app_config.py`` set ``DEPLOY_TO_SERVERS`` to ``True``.
 * Run ``fab staging master servers.setup`` to configure the server.
+* Manually copy the necessary environment variables to the server's `/etc/enviroment` file
 * Initialize the RDS DB ``fab staging master servers.fabcast:data.bootstrap_db``
 
-Once we have setup our servers we will need to install the webservices to support the admin that will allow us to override winner calls from AP, follow the instructions in [Install web services](#install-web-services). More details on the Admin can be found [here](#admin-interface)
+Once we have setup our servers we will need to initiate the webservices to support the admin that will allow us to override winner calls from AP: `fab servers.deploy_confs` (see also [Install web services](#install-web-services)). More details on the Admin can be found [here](#admin-interface).
 
 ### Update server after code changes
 
@@ -697,18 +700,12 @@ Install web services
 
 Web services are configured in the `confs/` folder.
 
-Running ``fab servers.setup`` will deploy your confs if you have set ``DEPLOY_TO_SERVERS`` and ``DEPLOY_WEB_SERVICES`` both to ``True`` at the top of ``app_config.py``.
+Running ``fab servers.setup`` will deploy your confs if you have set ``DEPLOY_TO_SERVERS`` to ``True`` at the top of ``app_config.py``.
 
 To check that these files are being properly rendered, you can render them locally and see the results in the `confs/rendered/` directory.
 
 ```
 fab servers.render_confs
-```
-
-You can also deploy only configuration files by running (normally this is invoked by `deploy`):
-
-```
-fab servers.deploy_confs
 ```
 
 Run a remote fab command
