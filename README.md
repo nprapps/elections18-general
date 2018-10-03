@@ -373,7 +373,7 @@ This project did not have strong requirements in terms of performance nor data l
 
 We use Ubuntu 16.04 LTS images for Python 3 projects.
 
-* Instance type: `t2.medium`
+* Instance type: `m4.large`
 * Storage: 10GB
 
 ### Additional needed software
@@ -391,9 +391,10 @@ _Note: NPR users can use our AMI that already contains this configuration, `pyth
 ### RDS instance configuration
 
 * Instance type: `db.t2.medium`
-* Database engine: PostgreSQL 9.6.3
+* Database engine: PostgreSQL 10.4
+* Storage: 20GB (minimum allowed) general purpose SSD
+* Publicly accessible: No
 
-_Note: At NPR we normally do not create the actual dabatase through the AWS Console, in order to test our database bootstrapping scripts in the staging and production environments._
 
 Deployment
 ----------
