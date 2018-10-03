@@ -374,7 +374,10 @@ This project did not have strong requirements in terms of performance nor data l
 We use Ubuntu 16.04 LTS images for Python 3 projects.
 
 * Instance type: `m4.large`
-* Storage: 10GB
+* Storage: 16GiB (minimum allowed)
+* Security groups:
+  * `NPR-offices` (or similar, to allow `ssh` from NPR-local computers)
+  * an AWS VPC that allows access between entities within the VPC (eg, a shared elections subnet)
 
 ### Additional needed software
 
@@ -393,8 +396,12 @@ _Note: NPR users can use our AMI that already contains this configuration, `pyth
 * Instance type: `db.t2.medium`
 * Database engine: PostgreSQL 10.4
 * Storage: 20GB (minimum allowed) general purpose SSD
-* Publicly accessible: No
+* Publicly accessible: Yes (the IP ranges allowed to access will be limited by the security group)
+* Security groups:
+  * `rds-access-npr` (or similar, to allow `psql` and Peewee access over Postgres ports from NPR-local computers)
+  * an AWS VPC that allows access between entities within the VPC (eg, a shared elections subnet)
 
+_Make sure to store the password, hostname, and other credentials in environment variables in `workinprivate`._
 
 Deployment
 ----------
