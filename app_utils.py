@@ -69,7 +69,8 @@ def open_db():
     """
     Open db connection
     """
-    models.db.connect()
+    if models.db._local.closed:
+        models.db.connect()
 
 
 def close_db(response):

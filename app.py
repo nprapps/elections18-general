@@ -50,6 +50,12 @@ SLUG_TO_OFFICENAME = {
 def calls_admin(office):
     officename = SLUG_TO_OFFICENAME[office]
     results = app_utils.filter_results(officename)
+    # Occasionally, the database will erroneously return zero races
+    # Handle this by signaling a server error
+    # See https://github.com/nprapps/elections18-general/issues/24
+    if not results:
+        return 'Server error; failed to fetch results from database', 500
+
     grouped = app_utils.group_results_by_race(results, officename)
     # This value will be the same for all seats in a chamber
     chamber_call_override = results.first().meta.first().chamber_call_override

@@ -26,7 +26,7 @@ def setup():
     """
     Setup servers for deployment.
 
-    This does not setup services or push to S3. Run deploy() next.
+    This does not setup services or push to S3. Run deploy_confs() next.
     """
     require('settings', provided_by=['production', 'staging'])
     require('branch', provided_by=['stable', 'master', 'branch'])
@@ -101,7 +101,7 @@ def setup_logs():
     """
     require('settings', provided_by=['production', 'staging'])
 
-    sudo('mkdir %(SERVER_LOG_PATH)s' % app_config.__dict__)
+    sudo('mkdir -p %(SERVER_LOG_PATH)s' % app_config.__dict__)
     sudo('chown ubuntu:ubuntu %(SERVER_LOG_PATH)s' % app_config.__dict__)
 
 @task
@@ -180,7 +180,7 @@ def render_confs():
     require('settings', provided_by=['production', 'staging'])
 
     with settings(warn_only=True):
-        local('mkdir confs/rendered')
+        local('mkdir -p confs/rendered')
 
     # Copy the app_config so that when we load the secrets they don't
     # get exposed to other management commands

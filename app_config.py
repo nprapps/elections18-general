@@ -53,8 +53,8 @@ DEFAULT_MAX_AGE = 20
 RELOAD_TRIGGER = False
 RELOAD_CHECK_INTERVAL = 60
 
-PRODUCTION_SERVERS = ['35.168.30.37']
-STAGING_SERVERS = ['18.232.180.28']
+PRODUCTION_SERVERS = ['52.90.111.124']
+STAGING_SERVERS = []
 
 # Should code be deployed to the web/cron servers?
 DEPLOY_TO_SERVERS = True
@@ -64,14 +64,6 @@ SERVER_PYTHON = 'python3'
 SERVER_PROJECT_PATH = '/home/%s/apps/%s' % (SERVER_USER, PROJECT_FILENAME)
 SERVER_REPOSITORY_PATH = '%s/repository' % SERVER_PROJECT_PATH
 SERVER_VIRTUALENV_PATH = '%s/virtualenv' % SERVER_PROJECT_PATH
-
-# Should the crontab file be installed on the servers?
-# If True, DEPLOY_TO_SERVERS must also be True
-DEPLOY_CRONTAB = False
-
-# Should the service configurations be installed on the servers?
-# If True, DEPLOY_TO_SERVERS must also be True
-DEPLOY_SERVICES = False
 
 UWSGI_SOCKET_PATH = '/tmp/%s.uwsgi.sock' % PROJECT_FILENAME
 

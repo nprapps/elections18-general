@@ -164,8 +164,5 @@ def shiva_the_destroyer():
         if app_config.DEPLOY_TO_SERVERS:
             servers.delete_project()
 
-            if app_config.DEPLOY_CRONTAB:
-                servers.uninstall_crontab()
-
-            if app_config.DEPLOY_SERVICES:
-                servers.nuke_confs()
+            servers.uninstall_crontab()
+            servers.nuke_confs()
