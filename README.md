@@ -42,6 +42,7 @@ Assumptions and Requirements
 * Node.js 8
 * [`virtualenv`](https://pypi.python.org/pypi/virtualenv) and [`virtualenvwrapper`](https://pypi.python.org/pypi/virtualenvwrapper)
 * `awscli`
+* `tidylib`
 
 ### Environment variables
 
@@ -383,12 +384,13 @@ We use Ubuntu 16.04 LTS images for Python 3 projects.
 
 * Python 3
 * `virtualenv`
-* Node.js 8
+* Node.js 8 and `npm`
 * Upstart, to use our configuration files
 * Nginx
 * `uwsgi`
+* `libtidy-dev`
 
-_Note: NPR users can use our AMI that already contains this configuration, `python3 webserver`_
+_Note: NPR users can use our AMI that already contains this configuration, `python3 webserver`; you may have to manually install Node.js, `tidylib`, and `npm`._
 
 
 ### RDS instance configuration
@@ -414,7 +416,7 @@ This app can be deployed to EC2 using Fabric in a manner to other NPR apps that 
 
 * In ``app_config.py`` set ``DEPLOY_TO_SERVERS`` to ``True``.
 * Run ``fab staging master servers.setup`` to configure the server.
-* Manually copy the necessary environment variables to the server's `/etc/enviroment` file
+* Manually copy the necessary environment variables to the server's `/etc/enviroment` file; this includes the AWS credentials, Google Apps credentials, AP API key, database connection credentials, and deployment target
 * Initialize the RDS DB ``fab staging master servers.fabcast:data.bootstrap_db``
 
 Once we have setup our servers we will need to initiate the webservices to support the admin that will allow us to override winner calls from AP: `fab servers.deploy_confs` (see also [Install web services](#install-web-services)). More details on the Admin can be found [here](#admin-interface).
