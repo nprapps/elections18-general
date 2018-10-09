@@ -141,15 +141,15 @@ LOG_FORMAT = '%(levelname)s:%(name)s:%(asctime)s: %(message)s'
 """
 elex config; see the `Configuration` section of `README.md`
 """
-NEXT_ELECTION_DATE = '2016-11-08'
+NEXT_ELECTION_DATE = '2018-11-06'
 # We need to make a single call in order to be compatible with our
 # testing server. Ideally we'd have two calls, with House and Initiative
 # data being requested at the race-wide level, to minimize data-over-the-wire.
 ELEX_FLAG_SETS = [
-    '--results-level ru --officeids H,S,G,I'
+    '--results-level ru --officeids H,S,G,I --test'
 ]
 ELEX_INIT_FLAG_SETS = [
-    '--results-level state --officeids H,S,G,I --set-zero-counts'
+    '--results-level state --officeids H,S,G,I --set-zero-counts --test'
 ]
 ELEX_FTP_FLAGS = ''
 
@@ -157,10 +157,10 @@ LOAD_RESULTS_INTERVAL = 12
 DATA_OUTPUT_FOLDER = '.rendered'
 
 CANDIDATE_SET_OVERRIDES = {
-    # New York's 22nd House seat: Tenney, Myers, and Babinec
-    '36602': ['79331', '79334', '79335'],
-    # Alaska Senate seat: Murkowski, Miller, and Stock
-    '2933': ['6021', '6650', '6647']
+    # Alaska governor: Dunleavy, Walker, and Begich
+    '2010': ['6733', '6399', '6731'],
+    # Kansas governor: Kelly, Kobach, and Orman
+    '17559': ['6798', '6805', '7006']
 }
 
 """
