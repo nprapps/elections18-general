@@ -172,27 +172,6 @@ def _select_ballot_measure_results():
 def render_top_level_numbers():
     # init with parties that already have seats
 
-    # TO-DO: Here are the 2018 numbers, for use once the AP starts
-    # running its 2018 tests in October
-    # senate_bop = {
-    #     'total_seats': 100,
-    #     'uncalled_races': 35,
-    #     'last_updated': None,
-    #     'npr_winner': None,
-    #     'Dem': {
-    #         'seats': 23,
-    #         'pickups': 0
-    #     },
-    #     'GOP': {
-    #         'seats': 42,
-    #         'pickups': 0
-    #     },
-    #     'Other': {
-    #         'seats': 0,
-    #         'pickups': 0
-    #     }
-    # }
-
     # Set which party controls the vice presidency, who determines
     # ties in Senate votes
     SENATE_TIE_GOES_TO = 'GOP'
@@ -201,19 +180,19 @@ def render_top_level_numbers():
     SENATE_THIRD_PARTIES_COUNT_TOWARDS = 'Dem'
     senate_bop = {
         'total_seats': 100,
-        'uncalled_races': 34,
+        'uncalled_races': 35,
         'last_updated': None,
         'npr_winner': None,
         'Dem': {
-            'seats': 34,
+            'seats': 23,
             'pickups': 0
         },
         'GOP': {
-            'seats': 30,
+            'seats': 42,
             'pickups': 0
         },
         'Other': {
-            'seats': 2,
+            'seats': 0,
             'pickups': 0
         }
     }
