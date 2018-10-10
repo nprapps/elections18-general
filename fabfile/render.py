@@ -628,7 +628,7 @@ def collate_other_candidates(results_for_a_race, for_big_boards=False, candidate
         # of the override setting
         if not any_votes_yet:
             resorted_filtered = []
-            for candidateid in app_config.CANDIDATE_SET_OVERRIDES[raceid]:
+            for candidateid in candidates_override:
                 for result in filtered:
                     if result['candidateid'] == candidateid:
                         resorted_filtered.append(result)
