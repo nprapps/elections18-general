@@ -219,10 +219,13 @@ def create_race_meta():
                 result.officename == 'U.S. House' and \
                 not result.is_special_election:
             seat = '{0}-{1}'.format(result.statepostal, result.seatnum)
-            house_row = list(filter(
+            house_rows = list(filter(
                 lambda x: x['seat'] == seat,
                 house_sheet
-            ))[0]
+            ))
+            assert len(house_rows) == 1, "Could not properly match Result to House spreadsheet"
+            house_row = house_rows[0]
+
             meta_obj['current_party'] = house_row['party']
             # Handle non-voting members that are tracked in our visuals,
             # such as DC's House representative
@@ -230,21 +233,25 @@ def create_race_meta():
             meta_obj['key_race'] = (house_row['key_race'] == 'True')
 
         if result.level == 'state' and result.officename == 'U.S. Senate':
-            senate_row = list(filter(
+            senate_rows = list(filter(
                 # Make sure to assign special election metadata accurately
                 # This doesn't need to happen for any other office type,
                 # since no other office has special elections that matter
                 # _and_ has multiple seats per state
                 lambda x: x['state'] == result.statepostal and result.is_special_election == (x['special'] == 'True'),
                 senate_sheet
-            ))[0]
+            ))
+            assert len(senate_rows) == 1, "Could not properly match Result to Senate spreadsheet"
+            senate_row = senate_rows[0]
             meta_obj['current_party'] = senate_row['party']
 
         if result.level == 'state' and result.is_ballot_measure:
-            measure_row = list(filter(
-                lambda x: x['state'] == result.statepostal and x['name'] == result.seatname,
+            measure_rows = list(filter(
+                lambda x: x['state'] == result.statepostal and x['raceid'] == result.raceid,
                 ballot_measure_sheet
-            ))[0]
+            ))
+            assert len(measure_rows) == 1, "Could not properly match Result to ballot-measure spreadsheet"
+            measure_row = measure_rows[0]
             meta_obj['ballot_measure_theme'] = measure_row['big_board_theme']
 
         models.RaceMeta.create(**meta_obj)

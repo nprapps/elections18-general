@@ -149,7 +149,7 @@ ELEX_FLAG_SETS = [
     '--results-level ru --officeids H,S,G,I --test'
 ]
 ELEX_INIT_FLAG_SETS = [
-    '--results-level state --officeids H,S,G,I --set-zero-counts --test'
+    '--results-level ru --officeids H,S,G,I --set-zero-counts --test'
 ]
 ELEX_FTP_FLAGS = ''
 
