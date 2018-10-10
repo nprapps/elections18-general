@@ -194,6 +194,7 @@ def create_race_meta():
     calendar_sheet = calendar['poll_times']
     senate_sheet = calendar['senate_seats']
     house_sheet = calendar['house_seats']
+    governor_sheet = calendar['governorships']
     ballot_measure_sheet = calendar['ballot_measures']
 
     results = models.Result.select()
@@ -244,6 +245,15 @@ def create_race_meta():
             assert len(senate_rows) == 1, "Could not properly match Result to Senate spreadsheet"
             senate_row = senate_rows[0]
             meta_obj['current_party'] = senate_row['party']
+
+        if result.level == 'state' and result.officename == 'Governor':
+            governor_rows = list(filter(
+                lambda x: x['state'] == result.statepostal,
+                governor_sheet
+            ))
+            assert len(governor_rows) == 1, "Could not properly match Result to governor spreadsheet"
+            governor_row = governor_rows[0]
+            meta_obj['current_party'] = governor_row['party']
 
         if result.level == 'state' and result.is_ballot_measure:
             measure_rows = list(filter(
