@@ -164,7 +164,15 @@ CANDIDATE_SET_OVERRIDES = {
     # Maine Senate: King and Brakey
     '20978': ['29099', '29904'],
     # Vermont Senate: Sanders and Zupan
-    '46760': ['52996', '53001']
+    '46760': ['52996', '53001'],
+    # Mississippi special Senate: Hyde-Smith, Espy, and McDaniel
+    '27182': ['32040', '32039', '32041'],
+    # Louisiana 1st district House: Scalise and Francis
+    '20048': ['24477', '24570'],
+    # Louisiana 3rd district House: Higgins and Methvin
+    '20050': ['24471', '24583'],
+    # Louisiana 6th district House: Graves and DeWitt
+    '20053': ['24480', '24590']
 }
 
 """
