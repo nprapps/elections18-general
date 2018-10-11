@@ -160,7 +160,11 @@ CANDIDATE_SET_OVERRIDES = {
     # Alaska governor: Dunleavy, Walker, and Begich
     '2010': ['6733', '6399', '6731'],
     # Kansas governor: Kelly, Kobach, and Orman
-    '17559': ['6798', '6805', '7006']
+    '17559': ['6798', '6805', '7006'],
+    # Maine Senate: King and Brakey
+    '20978': ['29099', '29904'],
+    # Vermont Senate: Sanders and Zupan
+    '46760': ['52996', '53001']
 }
 
 """
