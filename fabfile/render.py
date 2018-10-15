@@ -88,7 +88,8 @@ RACE_META_SELECTIONS = [
     models.RaceMeta.ballot_measure_theme
 ]
 
-ACCEPTED_PARTIES = ['Dem', 'GOP', 'Yes', 'No']
+MAJOR_CANDIDATE_PARTIES = ['Dem', 'GOP']
+
 # Number of candidates ideally in each statewide and county table
 # This can be overridden by specifying exactly which candidates are
 # desired, in `app_config`
@@ -524,7 +525,7 @@ def _set_pickup(result, result_dict):
 
 
 def _calculate_bop(result, bop):
-    party = result.party if result.party in ACCEPTED_PARTIES else 'Other'
+    party = result.party if result.party in MAJOR_CANDIDATE_PARTIES else 'Other'
     if result.is_npr_winner():
         bop[party]['seats'] += 1
         bop['uncalled_races'] -= 1
@@ -561,6 +562,25 @@ def _calculate_chamber_control(bop, tie_goes_to=None, third_parties_count_toward
         bop['npr_winner'] = override
 
 
+def _sort_when_no_votes_and_duplicated_parties(results):
+    # Ensure that at least one major-party candidate is included
+    # in the top results, if possible
+    sorted_results = []
+
+    one_candidate_per_party = {party: None for party in MAJOR_CANDIDATE_PARTIES}
+    for candidate in results:
+        if candidate['party'] in MAJOR_CANDIDATE_PARTIES:
+            one_candidate_per_party[candidate['party']] = candidate
+    sorted_results.extend(one_candidate_per_party.values())
+
+    # Add back in any candidates that weren't included already
+    for candidate in results:
+        if candidate not in sorted_results:
+            sorted_results.append(candidate)
+
+    return results
+
+
 def collate_other_candidates(results_for_a_race, for_big_boards=False, candidates_override=None):
     # Create an "Other" candidate, to simplify front-end visuals,
     # and minimize filesize of JSON dumps. This may be overridden
@@ -589,7 +609,7 @@ def collate_other_candidates(results_for_a_race, for_big_boards=False, candidate
     # - R -> R
     # - I -> I
 
-    # "Jungle primary" races, such as in Louisiana or California:
+    # "Jungle primary" races, such as in Louisiana or California, if votes present:
     # - D,R,R,D,I -> D,R,Oth
     # - D,I,R,D,I -> D,I,Oth
     # - R,R,R,R,D -> R,R,Oth
@@ -606,9 +626,25 @@ def collate_other_candidates(results_for_a_race, for_big_boards=False, candidate
 
     # Make sure that more prominent third-party candidates come first
     # But only order by votes if there are any votes in so far
-    any_votes_yet = results_for_a_race[0]['precinctsreporting'] > 0
+    any_votes_yet = sum([r['votecount'] for r in results_for_a_race]) > 0
     if any_votes_yet:
         results_for_a_race.sort(key=lambda c: c['votecount'], reverse=True)
+    else:
+        # If there are no results yet, ensure that the main-party candidates
+        # are ordered first; this ensures that they show up on the big board
+        results_for_a_race.sort(key=lambda c: c['party'] in MAJOR_CANDIDATE_PARTIES, reverse=True)
+
+        # Also, if there are multiple members of a particular party, make
+        # sure that the first candidates are of different major parties,
+        # so that the race doesn't appear to be single-party on the big boards
+        if for_big_boards:
+            parties = [r['party'] for r in results_for_a_race]
+            major_parties = [p for p in parties if p in MAJOR_CANDIDATE_PARTIES]
+            is_repeated_major_parties = len(major_parties) > len(set(major_parties))
+
+            if is_repeated_major_parties and \
+                    len(results_for_a_race) > BIG_BOARD_CANDIDATE_LIST_LENGTH:
+                results_for_a_race.sort(key=_sort_when_no_votes_and_duplicated_parties)
 
     other_votecount = 0
     other_votepct = 0
@@ -638,11 +674,7 @@ def collate_other_candidates(results_for_a_race, for_big_boards=False, candidate
         for result in results_for_a_race:
             # This logic properly handles "jungle primaries" that have
             # many main-party candidates, as well as when there is only
-            # one major-party candidate in the race.
-            # Importantly, it assumes that the candidates are ordered in
-            # descending vote-count order, which the AP _does_ do,
-            # but make sure that this sorting isn't violated elsewhere
-            # in the stack.
+            # one major-party candidate in the race
             if len(filtered) < TARGET_CANDIDATE_LIST_LENGTH:
                 filtered.append(result)
             else:
@@ -661,8 +693,8 @@ def collate_other_candidates(results_for_a_race, for_big_boards=False, candidate
             'npr_winner': other_winner
         })
 
-    # Big boards should never show "Other"s, and should show no more
-    # than two candidates
+    # Big boards should never show "Other"s, and have no need for
+    # candidates that won't be shown
     if for_big_boards:
         filtered = filtered[:BIG_BOARD_CANDIDATE_LIST_LENGTH]
 
