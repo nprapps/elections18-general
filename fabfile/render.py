@@ -644,7 +644,7 @@ def collate_other_candidates(results_for_a_race, for_big_boards=False, candidate
 
             if is_repeated_major_parties and \
                     len(results_for_a_race) > BIG_BOARD_CANDIDATE_LIST_LENGTH:
-                results_for_a_race.sort(key=_sort_when_no_votes_and_duplicated_parties)
+                results_for_a_race = _sort_when_no_votes_and_duplicated_parties(results_for_a_race)
 
     other_votecount = 0
     other_votepct = 0
