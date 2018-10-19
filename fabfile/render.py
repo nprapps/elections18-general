@@ -268,6 +268,7 @@ def render_get_caught_up():
 
     is_valid = True
     markup_fields = ['intro_1', 'intro_2', 'bullet_1', 'bullet_2', 'bullet_3', 'bullet_4', 'bullet_5']
+    markup_errors_found = None
     # Note that despite its name, tidy_fragment() requires a valid html document or else
     # it will throw markup validation errors. The documentation at http://countergram.github.io/pytidylib/
     # did not address this seeming discrepancy.
@@ -275,6 +276,7 @@ def render_get_caught_up():
         document, errors = tidy_fragment('<!DOCTYPE html><html><head><title>test</title></head><body>%s</body></html>' % serialized_data[field])
         if errors:
             is_valid = False
+            markup_errors_found = errors
             break
 
     # Don't publish if that option is off, or if a syntax error is found
@@ -289,6 +291,24 @@ def render_get_caught_up():
             {'meta': meta, 'content': content},
             'get-caught-up.json'
         )
+
+    # Publish a debug version to help editors gauge length of content
+    # If there are no markup errors and `published` is `True`, the contents
+    # of this file will be identical to that of the main GCU file
+    meta = {
+        'published': serialized_data['published'],
+        'last_updated': datetime.utcnow()
+    }
+    content = {
+        k: v.strip()
+        for k, v in serialized_data.items()
+        if k in markup_fields
+    } if is_valid else "The HTML markup is invalid. Errors:\n{}".format(markup_errors_found)
+
+    _write_json_file(
+        {'meta': meta, 'content': content},
+        'get-caught-up-debug.json'
+    )
 
 
 @task
