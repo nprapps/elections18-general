@@ -139,7 +139,11 @@ def publish_results():
 
 @task
 def sync_s3():
-    local('aws s3 sync {0} s3://{1}/{2}/data/ --acl public-read --cache-control max-age=5'.format(app_config.DATA_OUTPUT_FOLDER, app_config.S3_BUCKET, app_config.PROJECT_SLUG))
+    local('aws s3 sync {0} s3://{1}/{2}/data/ --acl public-read --cache-control max-age=5'.format(
+        app_config.DATA_OUTPUT_FOLDER,
+        app_config.S3_BUCKET,
+        app_config.PROJECT_SLUG
+    ))
 
 
 """
