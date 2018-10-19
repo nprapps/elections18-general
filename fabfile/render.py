@@ -282,6 +282,7 @@ def render_get_caught_up():
     # Don't publish if that option is off, or if a syntax error is found
     if serialized_data.get('published', '').lower() == 'yes' and is_valid:
         meta = {
+            'is_valid_markup': is_valid,
             'published': serialized_data['published'],
             'last_updated': datetime.utcnow()
         }
@@ -296,6 +297,7 @@ def render_get_caught_up():
     # If there are no markup errors and `published` is `True`, the contents
     # of this file will be identical to that of the main GCU file
     meta = {
+        'is_valid_markup': is_valid,
         'published': serialized_data['published'],
         'last_updated': datetime.utcnow()
     }
