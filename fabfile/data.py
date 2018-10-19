@@ -336,6 +336,9 @@ def write_unemployment_csv(start_state='AA'):
 
 @task
 def get_census_data(start_state='AA'):
+
+    # SD 46102 manually entered from 2012-2016 American Community Survey 5-Year Estimates
+    
     state_results = models.Result.select(models.Result.statepostal).distinct().order_by(models.Result.statepostal)
 
     for state_result in state_results:
