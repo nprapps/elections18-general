@@ -157,8 +157,8 @@ LOAD_RESULTS_INTERVAL = 12
 DATA_OUTPUT_FOLDER = '.rendered'
 
 CANDIDATE_SET_OVERRIDES = {
-    # Alaska governor: Dunleavy, Walker, and Begich
-    '2010': ['6733', '6399', '6731'],
+    # Alaska governor: Dunleavy, Begich, and Walker
+    '2010': ['6733', '6731', '6399'],
     # Kansas governor: Kelly, Kobach, and Orman
     '17559': ['6798', '6805', '7006'],
     # Maine Senate: King and Brakey
