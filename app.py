@@ -10,6 +10,7 @@ from flask_admin import Admin
 from flask_admin.contrib.peewee import ModelView
 from models import models
 from render_utils import make_context, smarty_filter, urlencode_filter
+from werkzeug.contrib.profiler import ProfilerMiddleware
 from werkzeug.debug import DebuggedApplication
 
 app = Flask(__name__)
@@ -19,6 +20,7 @@ app.secret_key = secrets.get('FLASK_SECRET_KEY')
 
 app.add_template_filter(comma_filter, name='comma')
 app.add_template_filter(percent_filter, name='percent')
+
 
 try:
     file_handler = logging.FileHandler('%s/admin_app.log' % app_config.SERVER_LOG_PATH)
@@ -50,12 +52,19 @@ SLUG_TO_OFFICENAME = {
 def calls_admin(office):
     officename = SLUG_TO_OFFICENAME[office]
 
-    # This value will be the same for all seats in a chamber
-    results = app_utils.filter_results(officename)
-    grouped = app_utils.group_results_by_race(results, officename)
-    try:
-        chamber_call_override = results.first().meta.first().chamber_call_override
-    except AttributeError:
+    # This value will be the same for all seats in a chamber, so pick
+    # an arbitrary one
+    chamber_call_override = models.RaceMeta.select(
+        models.RaceMeta.chamber_call_override
+    ).join(
+        models.Result
+    ).where(
+        models.Result.officename == SLUG_TO_OFFICENAME[office]
+    ).scalar()
+
+    results = app_utils.get_results(officename)
+
+    if not results:
         # Occasionally, the database will erroneously return zero races
         # Handle this by signaling a server error
         # See https://github.com/nprapps/elections18-general/issues/24
@@ -66,7 +75,7 @@ def calls_admin(office):
         'officename': officename,
         'chamber_call_override': chamber_call_override,
         'offices': SLUG_TO_OFFICENAME,
-        'races': grouped
+        'races': results
     })
 
     return make_response(render_template('calls.html', **context))
@@ -185,8 +194,10 @@ app.before_request(open_db)
 app.after_request(close_db)
 app.after_request(never_cache_preview)
 
-# Enable Werkzeug debug pages
+# Enable Werkzeug debug pages, and add a performance profiler
 if app_config.DEBUG:
+    app.config['PROFILE'] = True
+    app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[10])
     wsgi_app = DebuggedApplication(app, evalex=False)
 else:
     wsgi_app = app

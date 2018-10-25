@@ -1,36 +1,32 @@
 from collections import OrderedDict
 from decimal import Decimal, ROUND_DOWN
 from models import models
-from peewee import fn
 
-def filter_results(name):
-    results = models.Result.select().where(
+
+def get_results(name):
+    results = models.Result.select(
+        models.Result,
+        models.Call.accept_ap,
+        models.Call.override_winner
+    ).where(
         (models.Result.level == 'state') | (models.Result.level == 'national') | (models.Result.level == 'district'),
         models.Result.officename == name
-    ).order_by(models.Result.statepostal, models.Result.seatname, -models.Result.votecount, models.Result.last)
+    ).order_by(
+        models.Result.statepostal,
+        models.Result.seatname,
+        -models.Result.votecount,
+        models.Result.last
+    ).join(
+        models.Call,
+        on=(models.Call.call_id == models.Result.id)
+    ).dicts()
 
-    return results
-
-def group_results_by_race(results, name):
     grouped = OrderedDict()
     for result in results:
-        if name == 'President':
-            if result.reportingunitname:
-                slug = '{0}: {1}'.format(result.statepostal, result.reportingunitname)
-            else:
-                slug = result.statepostal
-
-            if slug not in grouped:
-                grouped[slug] = []
-
-            grouped[slug].append(result)
-        else:
-            if result.raceid not in grouped:
-                grouped[result.raceid] = []
-
-            grouped[result.raceid].append(result)
+        grouped[result['raceid']] = grouped.get(result['raceid'], []) + [result]
 
     return grouped
+
 
 def comma_filter(value):
     """
@@ -53,6 +49,7 @@ def percent_filter(value):
     else:
         cleaned_pct = value.quantize(Decimal('.1'), rounding=ROUND_DOWN)
         return '{:.1f}%'.format(cleaned_pct)
+
 
 def never_cache_preview(response):
     """

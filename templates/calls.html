@@ -78,12 +78,12 @@
                     <div class="col-md-4">
                         <div class="ap-btns">
                             <button
-                                class="btn btn-success btn-mini ap accept-ap {% if not results[0].call[0].accept_ap %} hidden {% endif %}"
+                                class="btn btn-success btn-mini ap accept-ap {% if not results[0].accept_ap %} hidden {% endif %}"
                                 data-race-id="{{ results[0].raceid }}" data-statepostal="{{ results[0].statepostal }}" data-reportingunit="{{ results[0].reportingunitname }}" data-level="{{ results[0].level }}">
                                 Accepting AP calls
                             </button>
 
-                            <button class="btn btn-warning btn-mini ap reject-ap {% if results[0].call[0].accept_ap %} hidden {% endif %}" data-race-id="{{ results[0].raceid }}" data-statepostal="{{ results[0].statepostal }}" data-reportingunit="{{ results[0].reportingunitname }}" data-level="{{ results[0].level }}">
+                            <button class="btn btn-warning btn-mini ap reject-ap {% if results[0].accept_ap %} hidden {% endif %}" data-race-id="{{ results[0].raceid }}" data-statepostal="{{ results[0].statepostal }}" data-reportingunit="{{ results[0].reportingunitname }}" data-level="{{ results[0].level }}">
                                 Not accepting AP Calls
                             </button>
                         </div>
@@ -104,7 +104,7 @@
                     {% for result in results[:5] %}
                     <tr>
                         <td class="col-candidate">
-                            <span class="candidate {{ result.party.lower() }} {% if result.call[0].accept_ap == True %}{% if result.winner == True %}called{% endif %}{% endif %}"
+                            <span class="candidate {{ result.party.lower() }} {% if result.accept_ap == True %}{% if result.winner == True %}called{% endif %}{% endif %}"
                                 data-first-name="{{ result.first }}"
                                 data-last-name="{{ result.last }}">
                                 {% if result.first %} {{ result.first }} {% endif %}
@@ -118,8 +118,8 @@
 
                         <td class="col-npr-winner">
                             <button class="npr-winner btn btn-mini
-                                {% if result.call[0].accept_ap == True %} disabled {% endif %}
-                                {% if result.call[0].override_winner == False %} hidden {% endif %}
+                                {% if result.accept_ap == True %} disabled {% endif %}
+                                {% if result.override_winner == False %} hidden {% endif %}
                                 {% if result.party == 'GOP' %} btn-danger {% endif %}
                                 {% if result.party == 'Dem' %} btn-primary {% endif %}
                                 {% if result.party == 'Other' %} btn-success {% endif %}">
@@ -128,7 +128,7 @@
                         </td>
                         <td class="col-ap-winner">
                             <button class="ap-winner btn btn-mini
-                                {% if result.call[0].accept_ap != True %} disabled {% endif %}
+                                {% if result.accept_ap != True %} disabled {% endif %}
                                 {% if result.level == 'district' and result.electwon <= 0 %} hidden {% endif %}
                                 {% if result.winner == False and result.level != 'district' %} hidden {% endif %}
                                 {% if result.party == 'GOP' %} btn-danger {% endif %}
@@ -139,16 +139,16 @@
                         </td>
                         <td class="col-call-npr">
                             <button class="npr-call npr btn btn-mini
-                                {% if result.call[0].accept_ap %} disabled {% endif %}
-                                {% if result.call[0].accept_ap != True and result.call[0].override_winner %} hidden {% endif %}"
+                                {% if result.accept_ap %} disabled {% endif %}
+                                {% if result.accept_ap != True and result.override_winner %} hidden {% endif %}"
                                 data-race-id="{{ result.raceid }}"
                                 data-result-id="{{ result.id }}">
                                 Call for NPR
                             </button>
 
                             <button class="npr-uncall npr btn btn-mini btn-warning
-                                {% if result.call[0].accept_ap == True %} disabled {% endif %}
-                                {% if result.call[0].accept_ap == True or result.call[0].override_winner != True %} hidden {% endif %}"
+                                {% if result.accept_ap == True %} disabled {% endif %}
+                                {% if result.accept_ap == True or result.override_winner != True %} hidden {% endif %}"
                                 data-race-id="{{ result.raceid }}"
                                 data-result-id="{{ result.id }}">
                                 Uncall for NPR
@@ -161,7 +161,7 @@
                         <tfoot>
                             <tr>
                                 <td colspan="5">
-                                    {{ results[5:]|length }} more candidates not shown
+                                    {{ results[5:]|length }} more candidate(s) not shown
                                 </td>
                             </tr>
                         </tfoot>
