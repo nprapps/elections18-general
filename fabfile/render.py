@@ -553,8 +553,10 @@ def _calculate_bop(result, bop):
         bop['uncalled_races'] -= 1
 
     if result.is_pickup():
+        picked_up_from = result.meta.first().current_party
+        picked_up_from = picked_up_from if picked_up_from in MAJOR_CANDIDATE_PARTIES else 'Other'
         bop[party]['pickups'] += 1
-        bop[result.meta.first().current_party]['pickups'] -= 1
+        bop[picked_up_from]['pickups'] -= 1
 
     if not bop['last_updated'] or result.lastupdated > bop['last_updated']:
         bop['last_updated'] = result.lastupdated
