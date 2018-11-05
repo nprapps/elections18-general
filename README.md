@@ -330,6 +330,25 @@ Example:
 }
 ```
 
+### PARTY_OVERRIDES
+
+In certain cases, we want to override the party of a particular candidate. This needs to be done upstream of most of the data processing: before the balance-of-power calculation, and before baking the state- and chamber-level JSON files.
+
+The structure is a map of `party` to use for the candidates, and the `polID` of the candidates to switch to that party.
+
+Type: `app\_config` variable
+
+Example:
+
+```python
+{
+    'Dem': [
+        # Alyse Galvin registered as "undeclared," but won the Democratic primary
+        '67552'
+    ]
+}
+```
+
 ### DATA\_OUTPUT\_FOLDER
 
 Path to folder where results JSON is rendered before being uploaded to S3.

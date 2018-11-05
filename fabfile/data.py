@@ -155,6 +155,20 @@ def load_results(initialize=False):
                     app_config.database['PGURI']
                 ))
 
+            # Implement candidate party overrides, in a way that's
+            # transparent to all downstream parts of the data processing
+            with hide('output', 'running'):
+                for party, polids in app_config.PARTY_OVERRIDES.items():
+                    local('''psql {} -c "
+                        UPDATE result
+                        SET party = '{}'
+                        WHERE polID = ANY('{{ {} }}'::text[]);
+                    "'''.format(
+                        app_config.database['PGURI'],
+                        party,
+                        ','.join(polids)
+                    ))
+
             logger.info('results loaded')
 
 

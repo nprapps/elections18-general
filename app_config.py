@@ -175,6 +175,13 @@ CANDIDATE_SET_OVERRIDES = {
     '20053': ['24480', '24590']
 }
 
+PARTY_OVERRIDES = {
+    'Dem': [
+        # Alyse Galvin registered as "undeclared," but won the Democratic primary
+        '67552'
+    ]
+}
+
 """
 Utilities
 """
