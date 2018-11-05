@@ -146,10 +146,10 @@ NEXT_ELECTION_DATE = '2018-11-06'
 # testing server. Ideally we'd have two calls, with House and Initiative
 # data being requested at the race-wide level, to minimize data-over-the-wire.
 ELEX_FLAG_SETS = [
-    '--results-level ru --officeids H,S,G,I --test'
+    '--results-level ru --officeids H,S,G,I'
 ]
 ELEX_INIT_FLAG_SETS = [
-    '--results-level ru --officeids H,S,G,I --set-zero-counts --test'
+    '--results-level ru --officeids H,S,G,I --set-zero-counts'
 ]
 ELEX_FTP_FLAGS = ''
 
