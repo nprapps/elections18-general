@@ -32,6 +32,21 @@ What is this?
 The backend for NPR's 2018 miderm general-election coverage. It includes an Associated Press data ETL, database, admin panel, and produces JSON output for use on the front-end. It is an iteration upon the 2016 GE and the 2017 Alabama special-election work.
 
 
+Updating for 2020
+-----------------
+
+So, you're starting work on 2020 development? Lucky you! Here a few tips:
+
+- [duplicate this repository](https://help.github.com/articles/duplicating-a-repository/), to preserve Git history (this repo's was preserved from 2017's work, which unfortunately did not preserve it from 2016's)
+- [transfer](https://help.github.com/articles/transferring-an-issue-to-another-repository/) any uncompleted Issues over to the new repository
+- try to refactor away from the current data-load strategy; it can be very slow, since it relies on deleting all AP-provided results data and then re-loading that entire table from the AP request. See if you can load/apply only diffs, or something similar that may be more performant.
+- try to refactor the JSON-rendering and -publishing logic, so that it's much more asynchronous; right now the JSON-building takes a long time (~20 seconds?), and even with the previous Python multiprocessing (which was removed due to bugginess) it took a while
+- figure out the best way in our pipeline to poll for AP API "reports," which is how we'll receive information on presidential delegates
+- determine if there's a stripped-down data structure to use to power maps, which are a very-likely need for 2020, or if serving all the data in a single state JSON is faster overall
+- think about the best way to serve single-race data, while avoiding latency issues related to uploading tons of small files; maybe this isn't necessary, but there was great demand from stations in 2018 for single-race embeds
+- have fun <3
+
+
 Assumptions and Requirements
 -----------
 
